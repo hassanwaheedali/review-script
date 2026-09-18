@@ -12,8 +12,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from config import AppConfig
-from llm_client import LLMClient
-from main import StateManager, load_products_from_csv
+from llm_client import GeneratedReview, LLMClient
+from main import (
+    JobExecutionStats,
+    ProductRecord,
+    StateManager,
+    load_products_from_csv,
+    process_product_pipeline,
+)
 from persona_data import (
     EMAIL_DOMAINS,
     ReviewerProfile,
@@ -23,7 +29,7 @@ from persona_data import (
     get_ratings_distribution,
     get_review_count,
 )
-from prompt_templates import SYSTEM_PROMPT, build_review_prompt
+from prompt_templates import SYSTEM_PROMPT, build_review_prompt, is_installation_candidate
 from wc_client import ReviewPostResult, WooCommerceReviewClient
 
 # --- Fixtures ---
@@ -123,22 +129,69 @@ def test_get_ratings_distribution() -> None:
 # --- Prompt Engineering Tests ---
 
 def test_system_prompt_structure() -> None:
-    """Tests system prompt conforms to prompt-engineer XML standard."""
+    """Tests system prompt conforms to prompt-engineer XML standard and negative constraints."""
     assert "<system_instructions>" in SYSTEM_PROMPT
     assert "<role>" in SYSTEM_PROMPT
     assert "<persona_and_style>" in SYSTEM_PROMPT
+    assert "<length_and_tier_structure>" in SYSTEM_PROMPT
     assert "<negative_constraints>" in SYSTEM_PROMPT
     assert "<output_format>" in SYSTEM_PROMPT
-    assert "craftsmanship" in SYSTEM_PROMPT  # explicit negative constraint mentioned
+    assert "craftsmanship" in SYSTEM_PROMPT
+    assert "ZERO TIME-CONTRADICTION" in SYSTEM_PROMPT
+    assert "hostel" in SYSTEM_PROMPT
+    assert "installation" in SYSTEM_PROMPT.lower()
 
 
 def test_build_review_prompt() -> None:
-    """Tests user prompt construction with product details and target ratings."""
-    prompt = build_review_prompt("Haier Refrigerator", "HR-66B", [5, 5, 4, 5, 4])
-    assert "<task>" in prompt
-    assert "<product_title>Haier Refrigerator</product_title>" in prompt
-    assert "<sku>HR-66B</sku>" in prompt
-    assert "<target_ratings>[5, 5, 4, 5, 4]</target_ratings>" in prompt
+    """Tests user prompt construction with product details, target ratings, and tier constraints."""
+    # Test strict short-only mode (75-80% catalog distribution)
+    prompt_short = build_review_prompt("Haier Refrigerator", "HR-66B", [5, 5, 4, 5, 4], allow_detailed=False)
+    assert "<task>" in prompt_short
+    assert "<product_title>Haier Refrigerator</product_title>" in prompt_short
+    assert "<sku>HR-66B</sku>" in prompt_short
+    assert "<target_ratings>[5, 5, 4, 5, 4]</target_ratings>" in prompt_short
+    assert "SEEDHI BAAT" in prompt_short
+    assert "NO TIER 3" in prompt_short
+    assert "<free_installation_directive>" not in prompt_short
+
+    # Test detailed-allowed mode (20-25% catalog distribution)
+    prompt_detailed = build_review_prompt("Haier Refrigerator", "HR-66B", [5, 4, 5], allow_detailed=True)
+    assert "Tier 3" in prompt_detailed
+
+    # Test free installation directive inclusion
+    prompt_with_inst = build_review_prompt(
+        "HAIER 8.5KG AUTOMATIC WASHING MACHINE", "HWM85", [5, 5, 4], include_installation=True
+    )
+    assert "<free_installation_directive>" in prompt_with_inst
+    assert "FREE installation" in prompt_with_inst
+
+    # Test WestPoint brand logistics constraint
+    prompt_westpoint = build_review_prompt(
+        "WestPoint WF-9216 Hand Blender Set", "WF-9216", [5, 4, 3], allow_detailed=False
+    )
+    assert "STRICTLY FORBIDDEN" in prompt_westpoint
+
+    # Test customer service directive inclusion
+    prompt_with_cs = build_review_prompt(
+        "Haier Refrigerator", "HR-66B", [5, 5, 4], include_customer_service=True
+    )
+    assert "<customer_service_directive>" in prompt_with_cs
+    assert "customer care or WhatsApp support" in prompt_with_cs
+
+
+def test_is_installation_candidate() -> None:
+    """Tests accurate classification of major appliances vs small gadgets."""
+    # Appliances eligible for free installation (active keywords: ACs and Geysers)
+    assert is_installation_candidate("Gree 1.5 Ton Fairy Inverter AC Heat & Cool") is True
+    assert is_installation_candidate("Canon 20L Instant Gas Geyser") is True
+    assert is_installation_candidate("Dawlance 2 Ton Split AC") is True
+
+    # Other items not eligible for installation under current configuration
+    assert is_installation_candidate("WestPoint WF-9216 700ml Deluxe Hand Blender Set") is False
+    assert is_installation_candidate("Anex AG-1062 Deluxe Dry Iron") is False
+    assert is_installation_candidate("Philips Electric Kettle 1.7L") is False
+    assert is_installation_candidate("Braun Series 3 Electric Shaver Trimmer") is False
+
 
 
 # --- LLM Client JSON Extraction Tests ---
@@ -219,6 +272,33 @@ def test_wc_post_review_duplicate(mock_post: MagicMock, mock_config: AppConfig) 
     assert "Duplicate" in (result.error or "")
 
 
+@patch("wc_client.requests.Session.delete")
+@patch("wc_client.requests.Session.get")
+def test_wc_get_and_delete_reviews(
+    mock_get: MagicMock,
+    mock_delete: MagicMock,
+    mock_config: AppConfig,
+) -> None:
+    """Tests fetching and deleting product reviews from WooCommerce."""
+    mock_get_resp = MagicMock()
+    mock_get_resp.status_code = 200
+    mock_get_resp.json.return_value = [{"id": 1137, "reviewer": "Sana Javed", "rating": 5}]
+    mock_get.return_value = mock_get_resp
+
+    mock_del_resp = MagicMock()
+    mock_del_resp.status_code = 200
+    mock_delete.return_value = mock_del_resp
+
+    client = WooCommerceReviewClient(mock_config)
+    reviews = client.get_product_reviews(10701)
+    assert len(reviews) == 1
+    assert reviews[0]["id"] == 1137
+
+    deleted = client.delete_review(1137, force=True)
+    assert deleted is True
+
+
+
 # --- CSV & State Management Tests ---
 
 def test_load_products_from_csv(tmp_path: Path) -> None:
@@ -257,3 +337,106 @@ def test_state_manager(tmp_path: Path) -> None:
     assert 101 in manager2.completed_ids
     assert 102 in manager2.completed_ids
     assert manager2.total_reviews_posted == 10
+
+
+# --- Pipeline & Safeguard Approval Gate Tests ---
+
+@patch("main.Prompt.ask")
+def test_process_product_pipeline_safeguard_regenerate_then_approve(
+    mock_prompt_ask: MagicMock,
+    tmp_path: Path,
+) -> None:
+    """Tests the safeguard approval gate: operator rejects first batch ('n'), then approves second ('y')."""
+    mock_prompt_ask.side_effect = ["n", "y"]
+
+    mock_llm = MagicMock(spec=LLMClient)
+    batch_1 = [
+        GeneratedReview(rating=5, review="Pehli batch review text", name="Ali Khan"),
+    ]
+    batch_2 = [
+        GeneratedReview(rating=4, review="Dusri batch fresh review", name="Usman Tariq"),
+    ]
+    mock_llm.generate_reviews.side_effect = [batch_1, batch_2]
+
+    state = StateManager(tmp_path / "state.json")
+    stats = JobExecutionStats()
+    prod = ProductRecord(id=9999, name="Test Dawlance Fridge", sku="DW-99", product_type="simple")
+
+    success = process_product_pipeline(
+        prod=prod,
+        llm_client=mock_llm,
+        wc_client=None,
+        is_dry_run=True,
+        state=state,
+        stats=stats,
+        enable_anim=False,
+        require_approval=True,
+    )
+
+    assert success is True
+    # LLM must be called twice because first batch was discarded on operator 'n'
+    assert mock_llm.generate_reviews.call_count == 2
+    assert stats.processed_products == 1
+    assert stats.total_reviews_posted == 0  # In dry run, stats.total_reviews_posted tracks live writes
+
+
+@patch("main.Prompt.ask")
+def test_process_product_pipeline_safeguard_skip(
+    mock_prompt_ask: MagicMock,
+    tmp_path: Path,
+) -> None:
+    """Tests the safeguard approval gate when operator chooses to skip product ('s')."""
+    mock_prompt_ask.return_value = "s"
+
+    mock_llm = MagicMock(spec=LLMClient)
+    mock_llm.generate_reviews.return_value = [
+        GeneratedReview(rating=5, review="Review to skip", name="Ali Khan"),
+    ]
+
+    state = StateManager(tmp_path / "state.json")
+    stats = JobExecutionStats()
+    prod = ProductRecord(id=8888, name="Skipped Fridge", sku="DW-88", product_type="simple")
+
+    success = process_product_pipeline(
+        prod=prod,
+        llm_client=mock_llm,
+        wc_client=None,
+        is_dry_run=True,
+        state=state,
+        stats=stats,
+        enable_anim=False,
+        require_approval=True,
+    )
+
+    assert success is True
+    assert mock_llm.generate_reviews.call_count == 1
+    assert stats.processed_products == 0
+    assert 8888 not in state.completed_ids
+
+
+def test_process_product_pipeline_auto_approve(tmp_path: Path) -> None:
+    """Tests the pipeline when require_approval=False (auto-approve flag)."""
+    mock_llm = MagicMock(spec=LLMClient)
+    mock_llm.generate_reviews.return_value = [
+        GeneratedReview(rating=5, review="Auto approved review", name="Hamza"),
+    ]
+
+    state = StateManager(tmp_path / "state.json")
+    stats = JobExecutionStats()
+    prod = ProductRecord(id=7777, name="Auto Approved TV", sku="TV-77", product_type="simple")
+
+    success = process_product_pipeline(
+        prod=prod,
+        llm_client=mock_llm,
+        wc_client=None,
+        is_dry_run=True,
+        state=state,
+        stats=stats,
+        enable_anim=False,
+        require_approval=False,
+    )
+
+    assert success is True
+    assert mock_llm.generate_reviews.call_count == 1
+    assert stats.processed_products == 1
+

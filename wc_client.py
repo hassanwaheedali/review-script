@@ -208,3 +208,49 @@ class WooCommerceReviewClient:
         except requests.RequestException:
             pass
         return None
+
+    def get_product_reviews(self, product_id: int) -> list[dict[str, Any]]:
+        """Fetches all customer reviews for a given product ID from WooCommerce.
+
+        Args:
+            product_id: Target product ID.
+
+        Returns:
+            List of review dictionaries returned by WooCommerce REST API.
+        """
+        try:
+            resp = self.session.get(
+                self.endpoint,
+                params={"product": str(product_id), "per_page": "100"},
+                verify=self.verify_ssl,
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                data: list[dict[str, Any]] = resp.json()
+                return data
+        except requests.RequestException:
+            pass
+        return []
+
+    def delete_review(self, review_id: int, force: bool = True) -> bool:
+        """Deletes a review by its ID from WooCommerce.
+
+        Args:
+            review_id: ID of the review to delete.
+            force: Whether to permanently delete (True) or move to trash (False).
+
+        Returns:
+            True if deletion succeeded (HTTP 200), False otherwise.
+        """
+        try:
+            url = f"{self.endpoint}/{review_id}"
+            resp = self.session.delete(
+                url,
+                params={"force": "true" if force else "false"},
+                verify=self.verify_ssl,
+                timeout=15,
+            )
+            return resp.status_code == 200
+        except requests.RequestException:
+            return False
+

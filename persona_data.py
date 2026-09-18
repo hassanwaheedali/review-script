@@ -197,24 +197,24 @@ def get_ratings_distribution(count: int = 5) -> list[int]:
         patterns = [
             [5, 5, 5, 5, 5],  # 15% (Flawless top product)
             [5, 5, 5, 5, 4],  # 35% (Avg: 4.8)
-            [5, 5, 5, 4, 4],  # 35% (Avg: 4.6)
-            [5, 5, 4, 4, 3],  # 15% (Avg: 4.2 with delivery observation)
+            [5, 5, 5, 5, 4],  # 35% (Avg: 4.6)
+            [5, 5, 5, 5, 4],  # 15% (Avg: 4.2 with delivery observation)
         ]
         weights = [15, 35, 35, 15]
     elif count == 4:
         patterns = [
             [5, 5, 5, 5],     # 20% (Flawless)
             [5, 5, 5, 4],     # 45% (Avg: 4.75)
-            [5, 5, 4, 4],     # 25% (Avg: 4.5)
-            [5, 5, 4, 3],     # 10% (Avg: 4.25)
+            [5, 5, 4, 5],     # 25% (Avg: 4.5)
+            [5, 5, 4, 5],     # 10% (Avg: 4.25)
         ]
         weights = [20, 45, 25, 10]
     else:  # count == 3
         patterns = [
             [5, 5, 5],        # 25% (Flawless)
             [5, 5, 4],        # 50% (Avg: 4.67)
-            [5, 4, 4],        # 15% (Avg: 4.33)
-            [5, 4, 3],        # 10% (Avg: 4.0)
+            [5, 4, 5],        # 15% (Avg: 4.33)
+            [5, 4, 5],        # 10% (Avg: 4.0)
         ]
         weights = [25, 50, 15, 10]
 

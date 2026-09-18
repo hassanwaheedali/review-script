@@ -202,16 +202,16 @@ def play_cod_boot_sequence(enable_anim: bool = True) -> None:
 
 
 def render_cyber_banner() -> None:
-    """Displays the high-density automation HUD card for KiaChahiye."""
+    """Displays the streamlined review pipeline banner."""
     banner_content = (
-        "[bold cyan] ██╗  ██╗██╗ █████╗  ██████╗██╗  ██╗ █████╗ ██╗  ██╗██╗██╗   ██╗███████╗[/bold cyan]\n"
-        "[bold cyan] ██║ ██╔╝██║██╔══██╗██╔════╝██║  ██║██╔══██╗██║  ██║██║╚██╗ ██╔╝██╔════╝[/bold cyan]       [bold green]DATA-PIPELINE[/bold green]\n"
-        "[bold cyan] █████╔╝ ██║███████║██║     ███████║███████║███████║██║ ╚████╔╝ █████╗  [/bold cyan]       [bold yellow]CATALOG v1.2[/bold yellow]\n"
-        "[bold cyan] ██╔═██╗ ██║██╔══██║██║     ██╔══██║██╔══██║██╔══██║██║  ╚██╔╝  ██╔══╝  [/bold cyan]       [bold white]NODE: PRODUCTION[/bold white]\n"
-        "[bold cyan] ██║  ██╗██║██║  ██║╚██████╗██║  ██║██║  ██║██║  ██║██║   ██║   ███████╗[/bold cyan]       [bold green][REST-SYNC][/bold green]\n"
-        "[bold cyan] ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝   ╚═╝   ╚══════╝[/bold cyan]\n\n"
-        "[bold white]WOOCOMMERCE BULK SYNTHESIS & INGESTION FRAMEWORK[/bold white]  │  [bold green]NATURAL PAKISTANI CONSUMER PROFILES[/bold green]\n"
-        "[dim cyan]ROUTER: AgentRouter API  •  TARGET: kiachahiye.com  •  CHRONO: 90-DAYS BACKDATED STAGGER[/dim cyan]"
+        "[bold cyan] ██████╗ ███████╗██╗   ██╗██╗███████╗██╗    ██╗███████╗[/bold cyan]\n"
+        "[bold cyan] ██╔══██╗██╔════╝██║   ██║██║██╔════╝██║    ██║██╔════╝[/bold cyan]       [bold green]STATUS: ONLINE[/bold green]\n"
+        "[bold cyan] ██████╔╝█████╗  ██║   ██║██║█████╗  ██║ █╗ ██║███████╗[/bold cyan]       [bold yellow]MODE: BULK-REST[/bold yellow]\n"
+        "[bold cyan] ██╔══██╗██╔══╝  ╚██╗ ██╔╝██║██╔══╝  ██║███╗██║╚════██║[/bold cyan]       [bold white]TARGET: kiachahiye.com[/bold white]\n"
+        "[bold cyan] ██║  ██║███████╗ ╚████╔╝ ██║███████╗╚███╔███╔╝███████║[/bold cyan]       [bold green][SYNC-ACTIVE][/bold green]\n"
+        "[bold cyan] ╚═╝  ╚═╝╚══════╝  ╚═══╝  ╚═╝╚══════╝ ╚══╝╚══╝ ╚══════╝[/bold cyan]\n\n"
+        "[bold white]WOOCOMMERCE AUTOMATED REVIEW INGESTION PIPELINE[/bold white]\n"
+        "[dim cyan]Auto-Generated Contextual Feedback • Backdated Past 90 Days • Pre-Approved[/dim cyan]"
     )
     console.print(
         Panel(
@@ -297,8 +297,9 @@ def process_product_pipeline(
     state: StateManager,
     stats: JobExecutionStats,
     enable_anim: bool = True,
+    require_approval: bool = True,
 ) -> bool:
-    """Executes the synthesis and publication pipeline for a single target product."""
+    """Executes the synthesis and publication pipeline for a single target product with human safeguard."""
     p_id = prod.id
     p_name = prod.name
     p_sku = prod.sku
@@ -310,13 +311,7 @@ def process_product_pipeline(
         if wc_prod and wc_prod.get("permalink"):
             live_permalink = str(wc_prod["permalink"])
 
-    # 1. Determine dynamic review count (3, 4, or 5) & ratings distribution
-    review_count = get_review_count()
-    ratings = get_ratings_distribution(count=review_count)
-    staggered_dates = generate_staggered_dates(count=review_count)
-
-    # Product Target Grid
-    stars_spread = " ".join([f"{r}★" for r in ratings])
+    # Target Acquired Box
     target_grid = Table.grid(padding=(0, 3))
     target_grid.add_column("K1", style="bold cyan")
     target_grid.add_column("V1", style="bold white")
@@ -329,7 +324,7 @@ def process_product_pipeline(
     )
     target_grid.add_row(
         "PRODUCT TITLE :", f"[bold white]{p_name}[/bold white]",
-        "VOLUME PLAN   :", f"[bold green]{review_count} Reviews[/bold green] [dim]({stars_spread})[/dim]",
+        "SAFEGUARD     :", "[bold yellow]APPROVAL GATE ACTIVE[/bold yellow]" if require_approval else "[bold green]AUTO-APPROVE[/bold green]",
     )
     target_grid.add_row(
         "STORE URL     :", f"[underline cyan]{live_permalink}[/underline cyan]",
@@ -346,117 +341,173 @@ def process_product_pipeline(
         )
     )
 
-    # 2. Call AI Synthesis with typing telemetry & active spinner
-    t_start = get_timestamp()
-    stream_typewriter_text(
-        prefix=f"[dim]{t_start}[/dim] [bold cyan][AI-CORE][/bold cyan] ",
-        text=f"Engaging deepseek-v4-flash neural co-processor for {review_count} Pakistani personas...",
-        anim_speed=0.005,
-        enable_anim=enable_anim,
-    )
+    # Generation & Approval Safeguard Loop (Regenerates if operator says 'n')
+    while True:
+        # 1. Determine dynamic review count (3, 4, or 5) & ratings distribution
+        review_count = get_review_count()
+        ratings = get_ratings_distribution(count=review_count)
+        staggered_dates = generate_staggered_dates(count=review_count)
 
-    try:
-        with console.status(
-            f"[dim cyan]Synthesizing {review_count} authentic customer personas via AgentRouter ({CONFIG.agentrouter_model})...[/dim cyan]",
-            spinner="dots",
-        ):
-            ai_reviews: list[GeneratedReview] = llm_client.generate_reviews(p_name, p_sku, ratings)
-    except RuntimeError as e:
-        console.print(f"[bold red]✗ [AI-CORE ERROR] Synthesis failed for Product #{p_id}: {e}[/bold red]")
-        log_failure(CONFIG.failed_log_path, p_id, p_name, str(e))
-        stats.failed_products += 1
-        return False
-
-    t_done = get_timestamp()
-    console.print(
-        f"[dim]{t_done}[/dim] [bold green][AI-CORE][/bold green] HTTP 200 OK — {len(ai_reviews)} persona reviews synthesized successfully.\n"
-    )
-
-    # 3. Publish / Stream each review
-    reviews_posted_for_product = 0
-    for idx, item in enumerate(ai_reviews):
-        rating = item.rating
-        text = item.review
-        created_date = staggered_dates[idx]
-        reviewer_name = item.name if item.name else generate_reviewer().name
-        reviewer_email = generate_email_for_name(reviewer_name)
-
-        stars = "★" * rating + "☆" * (5 - rating)
-
-        # Unified Review Card Grid
-        card_grid = Table.grid(padding=(0, 3))
-        card_grid.add_column("K1", style="bold cyan")
-        card_grid.add_column("V1", style="bold white")
-        card_grid.add_column("K2", style="bold cyan")
-        card_grid.add_column("V2", style="bold white")
-
-        card_grid.add_row(
-            "BUYER PERSONA :", f"[bold white]{reviewer_name}[/bold white] [dim cyan]<{reviewer_email}>[/dim cyan]",
-            "VERIFICATION  :", "[bold green]✔ VERIFIED OWNER[/bold green]",
-        )
-        card_grid.add_row(
-            "RATING SCORE  :", f"[bold yellow]{stars} ({rating}.0)[/bold yellow]",
-            "BACKDATED PKT :", f"[dim]{created_date} PKT[/dim]",
+        # 2. Call AI Synthesis with typing telemetry & active spinner
+        t_start = get_timestamp()
+        stream_typewriter_text(
+            prefix=f"[dim]{t_start}[/dim] [bold cyan][AI-CORE][/bold cyan] ",
+            text=f"Engaging deepseek-v4-flash neural co-processor for {review_count} Pakistani personas...",
+            anim_speed=0.005,
+            enable_anim=enable_anim,
         )
 
-        word_count = len(text.split())
-        review_card_content = Table.grid(padding=(0, 0))
-        review_card_content.add_column()
-        review_card_content.add_row(card_grid)
-        review_card_content.add_row(Rule(style="dim cyan"))
-        review_card_content.add_row(f"[italic bright_white]\"{text}\"[/italic bright_white]")
-
-        console.print(
-            Panel(
-                review_card_content,
-                title=f"[bold cyan]REVIEW SYNTHESIS {idx+1}/{len(ai_reviews)}[/bold cyan]",
-                subtitle=f"[dim cyan]{word_count} words[/dim cyan]",
-                border_style="cyan",
-                box=box.ROUNDED,
-                padding=(1, 2),
-            )
-        )
-
-        if is_dry_run:
-            time.sleep(0.15)
-            console.print(
-                f"  [dim]{get_timestamp()}[/dim] [dim yellow]⚡ [SIMULATION][/dim yellow] [dim]Dry-run active • Review validated in-memory (0 server writes)[/dim]"
-            )
-            reviews_posted_for_product += 1
-            time.sleep(0.1)
-        else:
-            assert wc_client is not None
+        try:
             with console.status(
-                f"[dim cyan]Transmitting Review #{idx+1} to WooCommerce REST API ({CONFIG.wc_site_url})...[/dim cyan]",
+                f"[dim cyan]Synthesizing {review_count} authentic customer personas via AgentRouter ({CONFIG.agentrouter_model})...[/dim cyan]",
                 spinner="dots",
             ):
-                res: ReviewPostResult = wc_client.post_review(
-                    product_id=p_id,
-                    reviewer_name=reviewer_name,
-                    reviewer_email=reviewer_email,
-                    review_text=text,
-                    rating=rating,
-                    date_created_iso=created_date,
-                    verified=True,
-                )
+                ai_reviews: list[GeneratedReview] = llm_client.generate_reviews(p_name, p_sku, ratings)
+        except RuntimeError as e:
+            console.print(f"[bold red]✗ [AI-CORE ERROR] Synthesis failed for Product #{p_id}: {e}[/bold red]")
+            log_failure(CONFIG.failed_log_path, p_id, p_name, str(e))
+            stats.failed_products += 1
+            return False
 
-            if res.success:
+        t_done = get_timestamp()
+        console.print(
+            f"[dim]{t_done}[/dim] [bold green][AI-CORE][/bold green] HTTP 200 OK — {len(ai_reviews)} persona reviews synthesized successfully.\n"
+        )
+
+        # 3. Preview generated reviews in unified cards
+        for idx, item in enumerate(ai_reviews):
+            rating = item.rating
+            text = item.review
+            created_date = staggered_dates[idx]
+            reviewer_name = item.name if item.name else generate_reviewer().name
+            reviewer_email = generate_email_for_name(reviewer_name)
+
+            stars = "★" * rating + "☆" * (5 - rating)
+
+            card_grid = Table.grid(padding=(0, 3))
+            card_grid.add_column("K1", style="bold cyan")
+            card_grid.add_column("V1", style="bold white")
+            card_grid.add_column("K2", style="bold cyan")
+            card_grid.add_column("V2", style="bold white")
+
+            card_grid.add_row(
+                "BUYER PERSONA :", f"[bold white]{reviewer_name}[/bold white] [dim cyan]<{reviewer_email}>[/dim cyan]",
+                "VERIFICATION  :", "[bold green]✔ VERIFIED OWNER[/bold green]",
+            )
+            card_grid.add_row(
+                "RATING SCORE  :", f"[bold yellow]{stars} ({rating}.0)[/bold yellow]",
+                "BACKDATED PKT :", f"[dim]{created_date} PKT[/dim]",
+            )
+
+            word_count = len(text.split())
+            review_card_content = Table.grid(padding=(0, 0))
+            review_card_content.add_column()
+            review_card_content.add_row(card_grid)
+            review_card_content.add_row(Rule(style="dim cyan"))
+            review_card_content.add_row(f"[italic bright_white]\"{text}\"[/italic bright_white]")
+
+            console.print(
+                Panel(
+                    review_card_content,
+                    title=f"[bold cyan]REVIEW {idx+1}/{len(ai_reviews)} (INSPECTION PREVIEW)[/bold cyan]",
+                    subtitle=f"[dim cyan]{word_count} words[/dim cyan]",
+                    border_style="cyan",
+                    box=box.ROUNDED,
+                    padding=(1, 2),
+                )
+            )
+
+        # 4. Human-In-The-Loop Approval Gate Safeguard
+        if require_approval:
+            approval_panel = (
+                "[bold white][y][/bold white] [bold green] ""y"" APPROVE & PUBLISH[/bold green]   [dim](Commit and send these reviews to website)[/dim]\n"
+                "[bold white][n][/bold white] [bold yellow] ""n"" REGENERATE[/bold yellow]          [dim](Discard batch and request fresh synthesis from LLM)[/dim]\n"
+                "[bold white][s][/bold white] [bold cyan] ""s"" SKIP PRODUCT[/bold cyan]        [dim](Skip Product #"
+                + str(p_id)
+                + " without publishing anything)[/dim]\n"
+                "[bold white][q][/bold white] [bold red] ""q"" QUIT / HALT[/bold red]         [dim](Stop pipeline safely and preserve checkpoint)[/dim]"
+            )
+            console.print(
+                Panel(
+                    approval_panel,
+                    title=f"[bold yellow]HUMAN-IN-THE-LOOP SAFEGUARD (PRODUCT #{p_id})[/bold yellow]",
+                    border_style="yellow",
+                    box=box.ROUNDED,
+                    padding=(1, 2),
+                )
+            )
+
+            action = Prompt.ask(
+                "[bold yellow]>> ACTION [y=Deploy / n=Regenerate / s=Skip / q=Quit][/bold yellow]",
+                choices=["y", "n", "s", "q"],
+                default="y",
+            ).lower()
+
+            if action == "n":
                 console.print(
-                    f"  [dim]{get_timestamp()}[/dim] [bold green]✔ [WP-REST API][/bold green] "
-                    f"POST /products/reviews -> [bold green]HTTP 201 CREATED[/bold green] "
-                    f"[dim](Review ID: [bold yellow]#{res.review_id}[/bold yellow])[/dim] [bold green][PUBLISHED][/bold green]"
+                    f"\n[bold yellow]↺ Discarded reviews for Product #{p_id}. Requesting fresh synthesis from LLM co-processor...[/bold yellow]\n"
+                )
+                continue  # Loop again and regenerate fresh reviews for the exact same product!
+            elif action == "s":
+                console.print(f"\n[cyan]⏭ Skipping Product #{p_id} by operator command.[/cyan]\n")
+                return True
+            elif action == "q":
+                console.print("\n[yellow]Pipeline halted by operator. Preserving state checkpoint...[/yellow]")
+                sys.exit(0)
+            else:
+                console.print("\n[bold green]✔ Reviews Approved! Commencing deployment to WooCommerce...[/bold green]\n")
+
+        # 5. Commit & Publish Approved Reviews
+        reviews_posted_for_product = 0
+        for idx, item in enumerate(ai_reviews):
+            rating = item.rating
+            text = item.review
+            created_date = staggered_dates[idx]
+            reviewer_name = item.name if item.name else generate_reviewer().name
+            reviewer_email = generate_email_for_name(reviewer_name)
+
+            if is_dry_run:
+                time.sleep(0.15)
+                console.print(
+                    f"  [dim]{get_timestamp()}[/dim] [dim yellow]⚡ [SIMULATION][/dim yellow] "
+                    f"Review #{idx+1} validated in-memory for [bold white]{reviewer_name}[/bold white] (0 server writes)"
                 )
                 reviews_posted_for_product += 1
+                time.sleep(0.1)
             else:
-                console.print(
-                    f"  [dim]{get_timestamp()}[/dim] [bold red]✗ [WP-REST API ERROR][/bold red] Review {idx+1} rejected: {res.error}"
-                )
+                assert wc_client is not None
+                with console.status(
+                    f"[dim cyan]Transmitting Review #{idx+1}/{len(ai_reviews)} to WooCommerce REST API ({CONFIG.wc_site_url})...[/dim cyan]",
+                    spinner="dots",
+                ):
+                    res: ReviewPostResult = wc_client.post_review(
+                        product_id=p_id,
+                        reviewer_name=reviewer_name,
+                        reviewer_email=reviewer_email,
+                        review_text=text,
+                        rating=rating,
+                        date_created_iso=created_date,
+                        verified=True,
+                    )
 
-            # Jitter cooldown ticker
-            delay_rev = random.uniform(CONFIG.delay_between_reviews_min, CONFIG.delay_between_reviews_max)
-            render_cyber_cooldown(delay_rev, enable_anim=enable_anim)
+                if res.success:
+                    console.print(
+                        f"  [dim]{get_timestamp()}[/dim] [bold green]✔ [WP-REST API][/bold green] "
+                        f"POST /products/reviews -> [bold green]HTTP 201 CREATED[/bold green] "
+                        f"[dim](Review ID: [bold yellow]#{res.review_id}[/bold yellow])[/dim] [bold green][PUBLISHED][/bold green]"
+                    )
+                    reviews_posted_for_product += 1
+                else:
+                    console.print(
+                        f"  [dim]{get_timestamp()}[/dim] [bold red]✗ [WP-REST API ERROR][/bold red] Review #{idx+1} rejected: {res.error}"
+                    )
+
+                # Jitter cooldown ticker
+                delay_rev = random.uniform(CONFIG.delay_between_reviews_min, CONFIG.delay_between_reviews_max)
+                render_cyber_cooldown(delay_rev, enable_anim=enable_anim)
 
         console.print()
+        break
 
     # 4. Product Completion Banner
     if reviews_posted_for_product > 0:
@@ -637,6 +688,13 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="Limit total products to process")
     parser.add_argument("--csv", type=str, default=str(CONFIG.default_csv_path), help="Path to products CSV")
     parser.add_argument("--dry-run", action="store_true", help="Run in forensic safe mode (no live writes)")
+    parser.add_argument(
+        "--auto-approve",
+        "--yes",
+        "-y",
+        action="store_true",
+        help="Bypass safeguard approval gate (auto-publish without interactive prompt)",
+    )
     parser.add_argument("--no-resume", action="store_true", help="Ignore saved checkpoint")
     parser.add_argument("--no-anim", action="store_true", help="Disable typewriter typing animations")
     args = parser.parse_args()
@@ -725,6 +783,7 @@ def main() -> None:
             state=state,
             stats=stats,
             enable_anim=enable_anim,
+            require_approval=not args.auto_approve,
         )
 
         # Product cooldown delay
