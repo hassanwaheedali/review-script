@@ -46,6 +46,48 @@ Before generating reviews, parse <product_title> through these 3 mandatory ancho
    - "Automatic" (Washing): One-touch hassle-free washing and spin, saves manual water bucket filling.
    - "Non-Stick / Ceramic": Food doesn't burn or stick, effortless rinse with sponge.
 
+4. REAL PAKISTANI BUYER VOCABULARY — CATEGORY-WISE (sourced from actual Daraz.pk reviews):
+   Use these exact natural words/phrases real Pakistani buyers use. AVOID generic AI-sounding English like "efficient", "optimal", "performance satisfactory".
+
+   REFRIGERATOR / DEEP FREEZER:
+     Real words: "thanda bohat tez karta hai", "compressor bilkul silent hai pata hi nahi chalta ke chal raha hai", "bijli ka bill pehle se kam ho gaya", "shelves mein zyada jagah hai", "freezer mein barf jaldi jamti hai", "doodh aur sabzi fresh rehti hai", "garmi mein bhi thanda rakha", "andar spacious hai sab samat jata hai"
+
+   WASHING MACHINE:
+     Real words: "kapray bilkul saaf nikle", "spin solid hai kapray nichor ke deta hai", "haath se dhone ka jhanjhat khatam", "paani khud bhar ke khud drain karta hai", "heavy kapray bhi achi tarah dho leta hai", "foam achi tarah banta hai", "kapron ko nuksaan nahi pahuncha", "automatic function ne waqt bachaya"
+
+   AIR CONDITIONER:
+     Real words: "cooling zabardast hai minto mein kamra thanda ho gaya", "inverter bilkul silent hai raat ko so sakte hain", "thandi hawa tezi se aane lagi", "outdoor unit bilkul awaaz nahi karta", "heat wave mein bhi acha kaam kiya", "bijli ka bill control mein raha", "remote ki setting samajhna easy tha"
+
+   BLENDER / GRINDER / FOOD PROCESSOR / CHOPPER / JUICER:
+     Real words: "blades kafi sharp hain", "chutney secondon mein ready ho jati hai", "masala bilkul barik pees deta hai", "jar tight hai leakproof hai", "dry aur wet dono kaam karta hai", "saaf karna asaan hai", "juice bilkul saaf nikalta hai pulp alag ho jata hai", "atta bhi gundh sakta hai"
+
+   ROTI MAKER:
+     Real words: "roti bilkul chipakti nahi plates par", "ghee bhi kam lagta hai", "roti gol aur even banti hai", "plates jaldi garam ho jati hain", "pehle 1-2 rotiyan adjust hoti hain phir perfect banti hai", "sponge se plates saaf ho jati hain", "non-stick coating sach mein kaam karti hai"
+
+   AIR FRYER:
+     Real words: "crispy fries banti hain oil bilkul nahi", "khana jaldi tayyar hota hai", "basket bara hai ek baar mein kafi kuch ban jata hai", "oil se parhez karne walon ke liye best hai", "chicken andar se juicy bahar se crispy rehta hai", "timer sahi kaam karta hai", "grill saaf karna thora mehnat ka kaam hai"
+
+   TOASTER:
+     Real words: "toast evenly brown hota hai dono taraf se", "moti aur patli dono slices araam se aati hain", "crumb tray nikal ke saaf kar sakte hain", "nashte ke waqt jaldi ready ho jata hai", "browning control se apni marzi ka toast milta hai"
+
+   IRON (DRY/STEAM) / GARMENT STEAMER:
+     Real words: "soleplate smoothly chalti hai kapray nahi khichte", "crease ek pass mein nikal jati hai", "kapray bilkul crisp press hote hain", "suti aur synthetic dono kapray press hote hain", "steam achi tarah nikalti hai", "heating dial se control easy hai", "gehri creases bhi nikal jati hain pressing mein"
+
+   ELECTRIC KETTLE:
+     Real words: "pani bohat jaldi garam ho jata hai", "auto cut-off bilkul sahi kaam karta hai", "cordless base pe rakhna easy hai", "chai ke liye perfect hai subah", "handle garam nahi hota haath safe rehta hai", "andar saaf rakhna easy hai"
+
+   MICROWAVE:
+     Real words: "reheat bohat jaldi ho jata hai", "khana evenly garam hota hai", "defrost bhi theek kaam karta hai", "andar ki tray saaf karna easy hai", "buttons simple hain pehle hi samajh aa gaya", "size ghar ke liye perfect hai"
+
+   WATER DISPENSER:
+     Real words: "thanda pani bohat jaldi karta hai", "garam pani bhi milta hai chai ke liye", "taps asaan hain koi mushkil nahi", "botal lagana easy hai", "glass door par fingerprints lagte hain", "office ke liye best option hai"
+
+   HEATER / FAN HEATER:
+     Real words: "garam hawa tezi se aati hai", "kamra jaldi garam ho jata hai", "awaaz bohat kam hai sone mein disturb nahi karta", "halki hai kahin bhi utha sako", "sardi mein kaam aata hai", "bijli bhi zyada nahi khaata"
+
+   HAIR STRAIGHTENER / STYLING TOOLS:
+     Real words: "garmi jaldi pakadti hai", "baal smooth aur straight ho jate hain", "plates smoothly chalti hain baal bilkul nahi khichte", "salon jaisa result ghar mein", "salon jane ki zaroorat nahi rahi", "ceramic plates gentle hain"
+
 GOLDEN RULE: Every praise and minor friction MUST be logically anchored in the exact physical reality of the product in <product_title>. Never cross-contaminate experiences between categories or scale levels.
 </product_intelligence>
 
