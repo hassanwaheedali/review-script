@@ -224,6 +224,22 @@ def test_llm_json_extraction(mock_config: AppConfig) -> None:
     assert client._extract_json(bad_text) is None
 
 
+@patch("llm_client.requests.Session.post")
+def test_llm_authentication_failure_fails_fast(mock_post: MagicMock, mock_config: AppConfig) -> None:
+    """Tests invalid AgentRouter credentials are reported without retrying."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 401
+    mock_resp.text = '{"error":{"message":"invalid token"}}'
+    mock_post.return_value = mock_resp
+
+    client = LLMClient(mock_config)
+
+    with pytest.raises(RuntimeError, match="authentication failed.*Rotate AGENTROUTER_API_KEY"):
+        client.generate_reviews("Test Refrigerator", "TEST-1", [5])
+
+    mock_post.assert_called_once()
+
+
 # --- WooCommerce Client Tests ---
 
 @patch("wc_client.requests.Session.post")

@@ -55,15 +55,15 @@ Before generating reviews, parse <product_title> through these 3 mandatory ancho
 
    REFRIGERATOR / DEEP FREEZER:
      * Roman Urdu: "Freezer mein barf jaldi jamti hai", "Compressor bilkul silent hai, awaz nahi karta", "Shelves mein kafi jagah hai, sab cheezin fresh rehti hain", "Garmi mein bhi cooling achi rehti hai"
-     * Short English: "Very spacious fridge, chilling is solid", "Silent compressor, no vibration", "Keeps vegetables fresh for days"
+     * Short English: "Very spacious fridge", "Silent compressor, no vibration", "Keeps vegetables fresh for days", "Good service and authentic product"
 
    WASHING MACHINE:
-     * Roman Urdu: "Kapray bilkul saaf dho leti hai, spin bhi solid hai", "Spin tub kapray achi tarah nichor ke deta hai", "Heavy kapray bhi aram se wash ho jate hain", "Foam acha banta hai aur timing behtareen hai"
+     * Roman Urdu: "Kapray bilkul saaf dho leti hai, spin bhi solid hai", "kapray achi tarah nichorti hay", "Heavy kapray bhi aram se wash ho jate hain", "Foam acha banta hai aur timing behtareen hai"
      * Short English: "Washes very clean, spin tub is powerful", "Runs smooth without making loud noise", "Takes heavy clothes easily and saves time"
 
    AIR CONDITIONER:
      * Roman Urdu: "Cooling zabardast hai, room jaldi chill kar deta hai", "Inverter bilkul silent hai, outdoor unit awaz nahi karta", "Thandi hawa tezi se aati hai", "Heatwave mein bhi cooling drop nahi hui"
-     * Short English: "Throws strong chilled air in minutes", "Outdoor unit is dead silent", "Maintains room temperature nicely"
+     * Short English: "chilled air in minutes", "Outdoor unit is dead silent", "Maintains room temperature nicely"
 
    BLENDER / GRINDER / FOOD PROCESSOR / CHOPPER / JUICER:
      * Roman Urdu: "Blades kafi sharp hain, masala secondon mein barik pees deta hai", "Chutney aur puree perfect banti hai", "Jar leakproof hai aur lock tight baithta hai", "Juice saaf nikalta hai pulp alag ho jata hai", "Safai aur wash karna boht asaan hai"
@@ -98,7 +98,7 @@ Before generating reviews, parse <product_title> through these 3 mandatory ancho
      * Short English: "Cools fast and dispenses hot water smoothly", "Sturdy taps with zero dripping", "Very neat look and reliable chilling"
 
    HEATER / FAN HEATER:
-     * Roman Urdu: "Garam hawa tezi se throw karta hai, kamra jaldi warm ho jata hai", "Sound boht halki hai sone mein disturb nahi karta", "Halka hai ek kamre se dusre kamre shift karna easy hai", "Sardi ke dino mein boht kaam aata hai"
+     * Roman Urdu: "Garam hawa tezi se throw karta hai, kamra jaldi warm ho jata hai", "Sound boht halki hai sone mein disturb nahi karta", "shift karna easy hai", "Sardi ke dino mein boht kaam aata hai"
      * Short English: "Warms up the bedroom quickly", "Quiet operation with good warm air throw", "Lightweight and easy to move around"
 
    HAIR STRAIGHTENER / STYLING TOOLS:
@@ -165,10 +165,9 @@ TIER 3 — DETAILED BUYER EXPERIENCE (30–45 words max, RARE — ~20% of produc
   2–3 sentences max. Unboxing, family context, or first-use observation.
   NEVER an essay. NEVER claim long durations like "5 mahine ho gaye".
   The example phrases below are for FORMAT ONLY:
-    - "Ghar ke upper portion ke liye mangwaya tha. Karachi mein subah order kiya shaam ko deliver hogaya. Cooling bhi achi hay aur overall experience is good. Thanks kiachahye"
+    - "Ordered this for the upper portion of my house. Karachi mein same-day delivery mili. Cooling is excellent and the overall experience has been great. Thanks KiaChahye!"
     - "Overall boht satisfying experience raha, packing solid thi aur product bhi working perfect hai. Recommended."
     - "Pehle knob ki setting thori samajh nahi aayi thi, WhatsApp kiya toh team ne turant clear kar diya. Product itself is great."
-    - "Behen ke ghar ke liye order kiya, 2-3 din mein safely pohanch gaya. Plates solid hain aur nonstick bhi genuine lagta hai."
 </length_and_tier_structure>
 
 <delivery_logistics_guidelines>
@@ -182,7 +181,7 @@ WESTPOINT & ANEX PRODUCTS:
 
 MAJOR APPLIANCE BRANDS (Haier, Dawlance, Gree, TCL, Orient, Pel, Kenwood, etc.):
   Karachi and Lahore → signature SAME DAY DELIVERY (Occasional only — do NOT mention in every batch):
-    Vary phrasing: "Shaam tak deliver ho gaya", "Same day delivery mil gayi, recommended", "Subah order kiya shaam tak rider aa gaya", "Fast delivery and safe parcel".
+    Vary phrasing: "Shaam tak deliver ho gaya", "Same day delivery mil gayi, recommended", "Subah order kiya shaam tak milgya", "Fast delivery and safe parcel".
   Other cities (Multan, Peshawar, Faisalabad, Rawalpindi, Quetta, etc.) → 2–3 days.
 
 DELIVERY MENTION RULE:
@@ -221,7 +220,7 @@ KiaChahiye.com provides responsive WhatsApp and phone customer support. Real buy
   1. Helpful Guidance & Cooperative Support (casual, embedded naturally in the review):
      The product observation and the support mention should flow as ONE natural sentence — not two separate robotic cause-effect statements.
      CRITICAL ANTI-PATTERN: NEVER write formulaic "X hua, Y solve ho gaya / kaam aasan ho gaya" endings. This sounds like a bot template.
-     BAD (avoid): "Toast boht achi banti hai, bas lever thora stiff hai. Support team ne WhatsApp par guide kiya, kaam aasan ho gaya."
+     BAD (avoid): "Toast boht achi banti hai, bas lever thora stiff hai. Support team ne WhatsApp par guide kiya achi service hay. recommended"
      BAD (avoid): "Setting samajh nahi aa rahi thi, contact kiya, kaam aasan ho gaya."
   2. Issue Resolution Story (Extremely High Realism & Trust):
      A buyer received the product, had a minor setup confusion or transit query, contacted customer care, and the team helped — written exactly as a real buyer would type it on their phone.
@@ -230,7 +229,7 @@ KiaChahiye.com provides responsive WhatsApp and phone customer support. Real buy
        * "Delivery time par aayi, aur ek choti si query thi jo unhon ne WhatsApp par resolve kar di. Customer service boht helpful lagi."
        * "Customer service is very helpful. They communicated professionally and resolved my query promptly."
        * "Product acha hay bas aik masla aya go unhoney resolve karwadya contact karney par, very cooperative customer service."
-       * "Thori confusion thi setup mein toh contact kiya, WhatsApp par seedha reply aaya aur issue clear ho gaya. Satisfied."
+       * "Thori confusion thi setup mein toh contact kiya, contact karney par issue clear ho gaya. Satisfied."
        * "Ek chiz samajh nahi aayi thi installation mein, WhatsApp karney par helpful response mila. Overall experience acha raha."
 - STYLE RULE: The customer service mention must feel like a spontaneous afterthought, NOT a structured conclusion. It should read like a buyer casually mentioned it while typing their review — not a formal complaint-resolution sentence. Keep it short and off-the-cuff.
 - RULE: Never mention customer service more than once in a batch. Must feel completely spontaneous.
@@ -243,8 +242,8 @@ KiaChahiye.com provides responsive WhatsApp and phone customer support. Real buy
 - Golden Formula: [Core Hardware Works 100% Solid] + [Exactly ONE Realistic Minor Friction Point].
 - Conversion Protection: Core performance (cooling, heating, motor, blades, sound, screen) MUST ALWAYS be confirmed as solid and functional.
 - Permitted Diverse Friction Pool (DO NOT repeat the same friction like 'extension cord' across products! Pick diverse, category-appropriate points):
-  * Delivery & Rider Delay (MUST explicitly state 'Late' or 'Slow'): Courier ne deliver karne mein kafi delay kiya / 4-5 din lag gaye, delivery late mili, tracking slow thi, ya rider ne aane se pehle call nahi ki.
-    CRITICAL: NEVER write a neutral 'parcel 3-4 din mein mila' as a complaint! In 3-star reviews: 'delivery late mili'.
+  * Delivery & Rider Delay (MUST explicitly state 'Late' or 'Slow'): Courier ne deliver karne mein kafi delay kiya, delivery late mili, tracking slow thi, ya rider ne aane se pehle call nahi ki.
+    CRITICAL: NEVER write a neutral 'parcel 3-4 din mein mila' or mention time just say late as a complaint! In 3-star reviews: 'delivery late mili'.
   * Unboxing & Packaging: Carton over-taped with too much packing tape (took 10 mins to open), outer box thora daba howa tha, or box was dusty.
   * Ergonomics & Sensory: Max speed par sound thora zyada hai, glossy surface par fingerprints aate hain, lid lock pehle din tight tha, water inlet connector tight fit tha, button thora stiff press hota hai, ya standby LED raat ko bright lagti hai. - no use of foran word please like "foran khatam"
   * Capacity / Sizing (COMPACT GADGETS ONLY): Mini-fridge, mini-chopper, personal blender ya travel iron mein capacity joint family ke hisab se thori compact lagi to do dafa mein kaam karna para (STRICTLY FORBIDDEN on standard/family appliances like 8+ Cu Ft fridges or 7+ KG washers).
@@ -462,7 +461,7 @@ def build_review_prompt(
     if allow_detailed:
         length_directive = (
             f"Tier 1 — SEEDHI BAAT: Exactly {seedhi_baat_count} review(s) must be ultra-short (5–10 words only). "
-            f"e.g. 'Motor boht tez hai, working 10/10 hai.' or 'Build quality solid hai, kaam bilkul fit hai.'\n"
+            f"e.g. 'Motor boht tez hai, working 10/10 hai.' or 'Build quality solid hai overall good experince.'\n"
             f"Tier 2 — PRACTICAL SHORT: {tier2_count} review(s) must be crisp practical feedback (12–25 words).\n"
             f"Tier 3 — DETAILED EXPERIENCE: Exactly 1 review may be a longer unboxing experience "
             f"(30–45 words max). NEVER an essay. ZERO multi-month duration claims."
@@ -502,9 +501,7 @@ def build_review_prompt(
             "(e.g. 'Delivery ke sath installation bhi free kar di!' or 'free installation bhi ho gayi').\n"
             "</free_installation_directive>\n"
         )
-        installation_reminder = (
-            "- Because <free_installation_directive> is present: include one natural mention of free installation in exactly one review.\n"
-        )
+        installation_reminder = "- Because <free_installation_directive> is present: include one natural mention of free installation in exactly one review.\n"
     else:
         installation_directive = ""
         installation_reminder = ""
@@ -517,9 +514,7 @@ def build_review_prompt(
             "(e.g. guidance on a query, or a minor setup issue resolved quickly).\n"
             "</customer_service_directive>\n"
         )
-        cs_reminder = (
-            "- Because <customer_service_directive> is present: include one natural mention of customer service/support in one review.\n"
-        )
+        cs_reminder = "- Because <customer_service_directive> is present: include one natural mention of customer service/support in one review.\n"
     else:
         cs_directive = ""
         cs_reminder = ""
