@@ -46,46 +46,64 @@ Before generating reviews, parse <product_title> through these 3 mandatory ancho
    - "Automatic" (Washing): One-touch hassle-free washing and spin, saves manual water bucket filling.
    - "Non-Stick / Ceramic": Food doesn't burn or stick, effortless rinse with sponge.
 
-4. REAL PAKISTANI BUYER VOCABULARY — CATEGORY-WISE (sourced from actual Daraz.pk reviews):
-   Check these natural words/phrases real Pakistani buyers use. AVOID generic AI-sounding English like "efficient", "optimal", "performance satisfactory" below is roman urdu you should use both english and roman urdu.The actual examples are below at <rating_guidelines> section "Authentic Daraz Real Buyer Linguistic Anchors (Direct from Daraz Shoppers)"
+4. REAL PAKISTANI BUYER VOCABULARY — CATEGORY-WISE (Sourced from Actual Daraz.pk Reviews):
+   Real Pakistani online buyers use direct, conversational phrases grounded in real sensory feedback.
+   - Mix: Seamlessly combine casual Roman Urdu and short everyday Pakistani English.
+   - Flow & Length: Keep observations short, punchy, and humanized ("seedhi baat" tone — 1 to 2 short sentences).
+   - Strict Anti-Bot Filter: NEVER use generic AI words like "efficient", "optimal", "satisfactory performance", "seamless", or "delighted".
+   - Grounding Anchors: Pick category-appropriate phrases below to ensure authentic physical reality:
+
    REFRIGERATOR / DEEP FREEZER:
-     Real words: "bohat acha product hay freezer bhi sahi hay", "compressor bhi silent hai", "bijli ka bill pehle se kam ho gaya", "shelves mein zyada jagah hai", "freezer mein barf jaldi jamti hai", " sari cheezin fresh rehti hai", "garmi mein bhi thanda rakhta hai", "spacious hay"
+     * Roman Urdu: "Freezer mein barf jaldi jamti hai", "Compressor bilkul silent hai, awaz nahi karta", "Shelves mein kafi jagah hai, sab cheezin fresh rehti hain", "Garmi mein bhi cooling achi rehti hai"
+     * Short English: "Very spacious fridge, chilling is solid", "Silent compressor, no vibration", "Keeps vegetables fresh for days"
 
    WASHING MACHINE:
-     Real words: "kapray bilkul saaf dhotah hay. recommended", "spin solid hai kapray nichor ke deta hai", "heavy kapray bhi achi tarah dho leta hai", "foam achi tarah banta hai", "automatic function ne waqt bachaya", "pani zyada karch hota hay bas" ->this one is negative 4 star
+     * Roman Urdu: "Kapray bilkul saaf dho leti hai, spin bhi solid hai", "Spin tub kapray achi tarah nichor ke deta hai", "Heavy kapray bhi aram se wash ho jate hain", "Foam acha banta hai aur timing behtareen hai"
+     * Short English: "Washes very clean, spin tub is powerful", "Runs smooth without making loud noise", "Takes heavy clothes easily and saves time"
 
    AIR CONDITIONER:
-     Real words: "cooling zabardast hai. recommended", "inverter bilkul silent hai", "thandi hawa deta hay", "outdoor unit bilkul awaaz nahi karta", "heat wave mein bhi acha kaam kiya", "bijli ka bill control mein raha"
+     * Roman Urdu: "Cooling zabardast hai, room jaldi chill kar deta hai", "Inverter bilkul silent hai, outdoor unit awaz nahi karta", "Thandi hawa tezi se aati hai", "Heatwave mein bhi cooling drop nahi hui"
+     * Short English: "Throws strong chilled air in minutes", "Outdoor unit is dead silent", "Maintains room temperature nicely"
 
    BLENDER / GRINDER / FOOD PROCESSOR / CHOPPER / JUICER:
-     Real words: "blades kafi sharp hain", "chutney secondon mein ready ho jati hai", "masala bilkul barik pees deta hai", "jar tight hai leakproof hai", "dry aur wet dono kaam karta hai", "saaf karna asaan hai", "juice bilkul saaf nikalta hai pulp alag ho jata hai", "atta bhi gundh sakta hai"
+     * Roman Urdu: "Blades kafi sharp hain, masala secondon mein barik pees deta hai", "Chutney aur puree perfect banti hai", "Jar leakproof hai aur lock tight baithta hai", "Juice saaf nikalta hai pulp alag ho jata hai", "Safai aur wash karna boht asaan hai"
+     * Short English: "Blades are super sharp, crushes smoothly", "Jars have tight leak-proof locking", "Easy to clean and very handy for daily cooking"
 
    ROTI MAKER:
-     Real words: "roti bilkul chipakti nahi plates par", "ghee bhi kam lagta hai", "roti gol aur even banti hai", "plates jaldi garam ho jati hain", "pehle 1-2 rotiyan adjust hoti hain phir perfect banti hai", "sponge se plates saaf ho jati hain", "non-stick coating sach mein kaam karti hai"
+     * Roman Urdu: "Plates jaldi garam hoti hain aur roti chipakti nahi", "Non-stick coating achi hai, ghee kam lagta hai", "Roti gol aur soft banti hai", "Pehli do rotiyon ke baad hath set ho jata hai", "Plates sponge se aram se saaf ho jati hain"
+     * Short English: "Non-stick surface is genuine, dough doesn't stick", "Heats up fast and makes even soft rotis", "Easy to wipe clean with a damp sponge"
 
    AIR FRYER:
-     Real words: "crispy fries banti hain oil bilkul nahi", "khana jaldi tayyar hota hai", "basket bara hai ek baar mein kafi kuch ban jata hai", "oil se parhez karne walon ke liye best hai", "chicken andar se juicy bahar se crispy rehta hai", "timer sahi kaam karta hai", "grill saaf karna thora mehnat ka kaam hai"
+     * Roman Urdu: "Bina oil ke fries crispy banti hain", "Chicken andar se juicy aur bahar se crisp rehta hai", "Basket kafi spacious hai, ek waqt mein kafi cheezin ban jati hain", "Timer aur heating control simple hain", "Oil se parhez karne walon ke liye best cheez hai"
+     * Short English: "Crispy snacks with almost zero oil", "Chicken turns out moist inside and crunchy outside", "Spacious basket, easy to wash grill"
 
    TOASTER:
-     Real words: "toast evenly brown hota hai dono taraf se", "moti aur patli dono slices araam se aati hain", "crumb tray nikal ke saaf kar sakte hain", "nashte ke waqt jaldi ready ho jata hai", "browning control se apni marzi ka toast milta hai"
+     * Roman Urdu: "Toast dono taraf se evenly brown hota hai", "Patli aur moti dono bread slices aram se aati hain", "Crumb tray nikal ke saaf karna asaan hai", "Browning dial se apni marzi ka crisp toast milta hai"
+     * Short English: "Browns bread slices evenly on both sides", "Removable crumb tray makes cleanup easy", "Quick and crisp toast for busy mornings"
 
-   IRON (DRY/STEAM) / GARMENT STEAMER:
-     Real words: "soleplate smoothly chalti hai kapray nahi khichte", "crease", "kapray bilkul crisp press hote hain", "suti aur synthetic dono kapray press hote hain", "steam achi tarah nikalti hai", "heating dial se control easy hai", "gehri creases bhi nikal jati hain pressing mein"
+   IRON (DRY / STEAM) / GARMENT STEAMER:
+     * Roman Urdu: "Soleplate smoothly chalti hai, kapray bilkul nahi khichte", "Kapray crisp press hote hain aur gehri creases nikal jati hain", "Steam achi nikalti hai aur dial control easy hai", "Suti aur synthetic dono kapray ache press karta hai"
+     * Short English: "Glides smoothly without catching clothes", "Heavy press removes stubborn wrinkles easily", "Steam output is strong and fast"
 
    ELECTRIC KETTLE:
-     Real words: "pani bohat jaldi garam ho jata hai", "auto cut-off bilkul sahi kaam karta hai", "cordless base pe rakhna easy hai", "chai ke liye perfect hai subah", "handle garam nahi hota haath safe rehta hai"
+     * Roman Urdu: "Pani minto mein boil ho jata hai", "Auto cut-off bilkul time par trip hota hai", "Cordless base par rakhna asaan hai", "Chai aur green tea ke liye subah best hai", "Handle garam nahi hota grip safe rehti hai"
+     * Short English: "Boils water very fast, auto shut-off is reliable", "Cool-touch handle and neat pouring spout", "Daily morning tea routine sorted"
 
-   MICROWAVE:
-     Real words: "reheat bohat jaldi ho jata hai", "khana sahi  garam hota hai", "defrost bhi theek kaam karta hai", "andar ki tray saaf karna easy hai", "buttons simple hain", "size mey bhi perfect hai"
+   MICROWAVE OVEN:
+     * Roman Urdu: "Khana barabar aur tezi se garam karta hai", "Reheat aur defrost dono sahi kaam karte hain", "Andar ki glass plate nikal ke saaf karna asaan hai", "Buttons simple hain aur display clear hai"
+     * Short English: "Heats food evenly throughout", "Quick reheating, defrost function works nicely", "Spacious inside and easy to wipe clean"
 
    WATER DISPENSER:
-     Real words: "thanda pani bohat jaldi karta hai", "taps asaan hain koi mushkil nahi", "botal lagana easy hai", "glass door par fingerprints lagte hain", "office ke liye best option hai"
+     * Roman Urdu: "Pani tezi se chilled aur garam karta hai", "Taps smooth hain, leakage ka koi masla nahi", "Botal load karna asaan hai", "Office aur home use ke liye best option hai"
+     * Short English: "Cools fast and dispenses hot water smoothly", "Sturdy taps with zero dripping", "Very neat look and reliable chilling"
 
    HEATER / FAN HEATER:
-     Real words: "garam hawa tezi se aati hai", "kamra jaldi garam ho jata hai", "awaaz bohat kam hai sone mein disturb nahi karta", "halka hai kahin bhi shift karsaktey hay", "sardi mein kaam aata hai", "bijli bhi zyada nahi khaata"
+     * Roman Urdu: "Garam hawa tezi se throw karta hai, kamra jaldi warm ho jata hai", "Sound boht halki hai sone mein disturb nahi karta", "Halka hai ek kamre se dusre kamre shift karna easy hai", "Sardi ke dino mein boht kaam aata hai"
+     * Short English: "Warms up the bedroom quickly", "Quiet operation with good warm air throw", "Lightweight and easy to move around"
 
    HAIR STRAIGHTENER / STYLING TOOLS:
-     Real words: "garam galdi hogata hai", "baal smooth aur straight ho jate hain", "plates smoothly chalti hain baal bilkul nahi khichte", "ceramic plates gentle hain"
+     * Roman Urdu: "Plates jaldi garam ho jati hain aur baal bilkul nahi khichte", "Ceramic plates smooth hain, baal silky straight rehte hain", "Cord swivel hone ki wajah se styling boht easy hai"
+     * Short English: "Heats up fast, glides smoothly without snagging hair", "Leaves hair straight, smooth and shiny", "Lightweight and comfortable to handle"
 
 GOLDEN RULE: Every praise and minor friction MUST be logically anchored in the exact physical reality of the product in <product_title>. Never cross-contaminate experiences between categories or scale levels.
 </product_intelligence>
