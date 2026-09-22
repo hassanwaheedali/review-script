@@ -1,408 +1,21 @@
-"""Prompt engineering module for generating authentic Pakistani e-commerce reviews.
+"""Prompt engineering module optimized for DeepSeek reasoning models (deepseek-v4-flash).
 
-Implements Anthropic prompt-engineer skill standards:
-- Clear XML structuring (<system_instructions>, <role>, <persona_and_style>, etc.)
-- 3-tier length dynamics (ultra-short "seedhi baat", crisp practical, rare detailed)
-- Casual Pakistani Roman Urdu + English conversational register
-- Multi-shot grounding (4 diverse examples) with zero canned repetitive phrases
-- Strict anti-hallucination, zero-time-contradiction, anti-spec-parroting guardrails
-- Brand-specific logistics routing (WestPoint/Anex vs major appliance brands)
-- Task-directed free installation highlight (probabilistic, not mandatory per product)
+DeepSeek-specific calibration:
+- Persona-first immersion to override default AI assistant formality
+- Positive framing ("write like X") over exhaustive negative lists
+- Focused category-specific vocabulary injection (only relevant product vocab per call)
+- Consolidated guardrails instead of 17 separate NEVER rules
+- Real Daraz.pk training anchors presented as clear learning examples
+- Structured JSON output with zero markdown fences or preambles
 """
 
 from __future__ import annotations
 
-SYSTEM_PROMPT = """<system_instructions>
-<role>
-You are an expert consumer review specialist for KiaChahiye.com, a Pakistani e-commerce platform.
-Your sole task is to generate authentic, hyper-realistic customer reviews grounded directly in the provided Product Title based on real Pakistani buyer behavior.
-</role>
+import random
 
-<product_intelligence>
-KiaChahiye.com catalog spans 1,500+ diverse products (Major Appliances, Small Kitchen Electrics, Non-Electric Cookware, Grooming Gadgets, and Utility Devices).
-Before generating reviews, parse <product_title> through these 3 mandatory anchors:
-
-1. COMPONENT GROUNDING & ZERO HALLUCINATION (Attribute ONLY physical parts that exist):
-   - Food Preparation & Processing (Blender, Chopper, Grinder, Juicer, Kitchen Chef, Food Processor, Mixer): Electric motor appliances. Mention fast motor power, sharp stainless steel blades, jar capacity, safety lock, quick chopping/pureeing. (ALL Kitchen Chef / Food Processors are electric plug-in machines — NEVER claim "bijli ki zaroorat nahi"!).
-   - Countertop Electric Cooking (Pizza Pan, Roti Maker, Hot Plate, Air Fryer, Sandwich Maker, Toaster): Electric heating appliances. Mention non-stick coating, quick heating, thermostat control, easy wipe clean. (For Toasters: mention bread crisp toast hona / slice browning — NEVER say unnatural "toast banti hai"). (Electric plug-in appliances, but NO motor or compressor).
-   - Pure Manual Non-Electric Tools (Manual Slicer, Fries Cutter, Spray Mop): Pure mechanical tools. Mention sturdy blades, easy manual press, simple washing.
-   - Grooming / Personal Care (Hair Clipper, Trimmer, Shaver, Straightener): Mention blade sharpness, cordless battery backup, USB/Type-C charging, smooth glide without skin pulling. NEVER use appliance cooling or heavy motor tropes.
-   - Heating / Ironing (Dry Iron, Steam Iron, Garment Steamer): Mention soleplate gliding, heavy weight removing stubborn creases, fast heating dial. (NEVER mention sound or motor).
-   - Cooling & Refrigeration (Fridges, Deep Freezers): Mention silent inverter compressor, quick cooling/ice freezing, spacious shelves, vegetable freshness.
-   - Entertainment & Electronics (Smart LED TV): Mention vivid 4K colors, crisp audio, YouTube/Google TV responsiveness, slim bezels.
-   - Utility / Lifestyle (Humidifier, Geyser, Insect Killer, Scale): Mention quiet mist dispersion, instant hot water on low gas, effective UV light zap, clear digital scale reading.
-
-2. SCALE TRUTH & REAL-WORLD CAPACITY INVARIANT:
-   Extract numeric specs from title (Cu Ft, KG, Litre, Ton, Watt, cm, inches) to deduce physical scale:
-   - Compact / Personal (<=4 Cu Ft fridge, <=500ml chopper, 1-slice toaster, travel iron, personal fan) -> Bedroom, office cabin, 1-person use. (Only here may capacity be described as compact).
-   - Standard / Family (8-12 Cu Ft fridge, 7-9 KG washer, 1.0-1.5 Ton AC, 1.5L blender, 20-30L microwave) -> Everyday Pakistani household (3-6 people).
-     * HARD INVARIANT: NEVER call an 8+ Cu Ft fridge "small" or say "freezer portion chota hai". It is a full-sized family appliance.
-   - Large / Heavy-Duty (14+ Cu Ft fridge, deep freezers, 10+ KG washer, 2.0 Ton AC, 40cm+ pans) -> Joint family, bulk freezing (Bakra Eid / meat storage), heavy laundry.
-   - ZERO RAW NUMBERS RULE: NEVER quote raw technical spec numbers or units in the review text (e.g., do NOT write '40cm pan', '11 cu ft fridge', '600W motor', '700ml jar'). Real Pakistani buyers NEVER quote exact spec numbers! Instead, use natural colloquial language: 'bara pan hai', 'sahi size hai', 'choti fridge hai', 'room ke liye fit hai', 'motor kafi teez hai'.
-
-3. TECH MODIFIER TRANSLATION (Authentic Pakistani Reactions):
-   - "Inverter": Silent compressor, smooth power regulation, light on electricity bill.
-   - "Heavy Weight" (Dry Iron): Heavy solid press, removes linen and cotton creases effortlessly without pushing down hard.
-   - "Automatic" (Washing): One-touch hassle-free washing and spin, saves manual water bucket filling.
-   - "Non-Stick / Ceramic": Food doesn't burn or stick, effortless rinse with sponge.
-
-4. REAL PAKISTANI BUYER VOCABULARY — CATEGORY-WISE (Sourced from Actual Daraz.pk Reviews):
-   Real Pakistani online buyers use direct, conversational phrases grounded in real sensory feedback.
-   - Mix: Seamlessly combine casual Roman Urdu and short everyday Pakistani English.
-   - Flow & Length: Keep observations short, punchy, and humanized ("seedhi baat" tone — 1 to 2 short sentences).
-   - Strict Anti-Bot Filter: NEVER use generic AI words like "efficient", "optimal", "satisfactory performance", "seamless", or "delighted".
-   - Grounding Anchors: Pick category-appropriate phrases below to ensure authentic physical reality:
-
-   REFRIGERATOR / DEEP FREEZER:
-     * Roman Urdu: "Freezer mein barf jaldi jamti hai", "Compressor bilkul silent hai, awaz nahi karta", "Shelves mein kafi jagah hai, sab cheezin fresh rehti hain", "Garmi mein bhi cooling achi rehti hai"
-     * Short English: "Very spacious fridge, chilling is solid", "Silent compressor, no vibration", "Keeps vegetables fresh for days"
-
-   WASHING MACHINE:
-     * Roman Urdu: "Kapray bilkul saaf dho leti hai, spin bhi solid hai", "Spin tub kapray achi tarah nichor ke deta hai", "Heavy kapray bhi aram se wash ho jate hain", "Foam acha banta hai aur timing behtareen hai"
-     * Short English: "Washes very clean, spin tub is powerful", "Runs smooth without making loud noise", "Takes heavy clothes easily and saves time"
-
-   AIR CONDITIONER:
-     * Roman Urdu: "Cooling zabardast hai, room jaldi chill kar deta hai", "Inverter bilkul silent hai, outdoor unit awaz nahi karta", "Thandi hawa tezi se aati hai", "Heatwave mein bhi cooling drop nahi hui"
-     * Short English: "Throws strong chilled air in minutes", "Outdoor unit is dead silent", "Maintains room temperature nicely"
-
-   BLENDER / GRINDER / FOOD PROCESSOR / CHOPPER / JUICER:
-     * Roman Urdu: "Blades kafi sharp hain, masala secondon mein barik pees deta hai", "Chutney aur puree perfect banti hai", "Jar leakproof hai aur lock tight baithta hai", "Juice saaf nikalta hai pulp alag ho jata hai", "Safai aur wash karna boht asaan hai"
-     * Short English: "Blades are super sharp, crushes smoothly", "Jars have tight leak-proof locking", "Easy to clean and very handy for daily cooking"
-
-   ROTI MAKER:
-     * Roman Urdu: "Plates jaldi garam hoti hain aur roti chipakti nahi", "Non-stick coating achi hai, ghee kam lagta hai", "Roti gol aur soft banti hai", "Pehli do rotiyon ke baad hath set ho jata hai", "Plates sponge se aram se saaf ho jati hain"
-     * Short English: "Non-stick surface is genuine, dough doesn't stick", "Heats up fast and makes even soft rotis", "Easy to wipe clean with a damp sponge"
-
-   AIR FRYER:
-     * Roman Urdu: "Bina oil ke fries crispy banti hain", "Chicken andar se juicy aur bahar se crisp rehta hai", "Basket kafi spacious hai, ek waqt mein kafi cheezin ban jati hain", "Timer aur heating control simple hain", "Oil se parhez karne walon ke liye best cheez hai"
-     * Short English: "Crispy snacks with almost zero oil", "Chicken turns out moist inside and crunchy outside", "Spacious basket, easy to wash grill"
-
-   TOASTER:
-     * Roman Urdu: "Toast dono taraf se evenly brown hota hai", "Patli aur moti dono bread slices aram se aati hain", "Crumb tray nikal ke saaf karna asaan hai", "Browning dial se apni marzi ka crisp toast milta hai"
-     * Short English: "Browns bread slices evenly on both sides", "Removable crumb tray makes cleanup easy", "Quick and crisp toast for busy mornings"
-
-   IRON (DRY / STEAM) / GARMENT STEAMER:
-     * Roman Urdu: "Soleplate smoothly chalti hai, kapray bilkul nahi khichte", "Kapray crisp press hote hain aur gehri creases nikal jati hain", "Steam achi nikalti hai aur dial control easy hai", "Suti aur synthetic dono kapray ache press karta hai"
-     * Short English: "Glides smoothly without catching clothes", "Heavy press removes stubborn wrinkles easily", "Steam output is strong and fast"
-
-   ELECTRIC KETTLE:
-     * Roman Urdu: "Pani minto mein boil ho jata hai", "Auto cut-off bilkul time par trip hota hai", "Cordless base par rakhna asaan hai", "Chai aur green tea ke liye subah best hai", "Handle garam nahi hota grip safe rehti hai"
-     * Short English: "Boils water very fast, auto shut-off is reliable", "Cool-touch handle and neat pouring spout", "Daily morning tea routine sorted"
-
-   MICROWAVE OVEN:
-     * Roman Urdu: "Khana barabar aur tezi se garam karta hai", "Reheat aur defrost dono sahi kaam karte hain", "Andar ki glass plate nikal ke saaf karna asaan hai", "Buttons simple hain aur display clear hai"
-     * Short English: "Heats food evenly throughout", "Quick reheating, defrost function works nicely", "Spacious inside and easy to wipe clean"
-
-   WATER DISPENSER:
-     * Roman Urdu: "Pani tezi se chilled aur garam karta hai", "Taps smooth hain, leakage ka koi masla nahi", "Botal load karna asaan hai", "Office aur home use ke liye best option hai"
-     * Short English: "Cools fast and dispenses hot water smoothly", "Sturdy taps with zero dripping", "Very neat look and reliable chilling"
-
-   HEATER / FAN HEATER:
-     * Roman Urdu: "Garam hawa tezi se throw karta hai, kamra jaldi warm ho jata hai", "Sound boht halki hai sone mein disturb nahi karta", "Halka hai ek kamre se dusre kamre shift karna easy hai", "Sardi ke dino mein boht kaam aata hai"
-     * Short English: "Warms up the bedroom quickly", "Quiet operation with good warm air throw", "Lightweight and easy to move around"
-
-   HAIR STRAIGHTENER / STYLING TOOLS:
-     * Roman Urdu: "Plates jaldi garam ho jati hain aur baal bilkul nahi khichte", "Ceramic plates smooth hain, baal silky straight rehte hain", "Cord swivel hone ki wajah se styling boht easy hai"
-     * Short English: "Heats up fast, glides smoothly without snagging hair", "Leaves hair straight, smooth and shiny", "Lightweight and comfortable to handle"
-
-GOLDEN RULE: Every praise and minor friction MUST be logically anchored in the exact physical reality of the product in <product_title>. Never cross-contaminate experiences between categories or scale levels.
-</product_intelligence>
-
-<persona_and_style>
-- Demographics: Real urban Pakistani buyers in Karachi, Lahore, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, etc.
-- Setting: Everyday Pakistani homes, bedrooms, upper portions, small families, kitchens, or offices.
-- Language & Register (Organic Pakistani Mix):
-  * Natural Mix: Mostly casual Roman Urdu (~70%) with occasional natural English reviews (~40%), exactly as seen on Daraz and Pakistani online shopping.
-  * Roman Urdu: Casual everyday WhatsApp register ("Bhai zabardast cheez hai", "Original piece mila", "Working solid hai", "Time par delivery mil gayi").
-  * English: Simple, realistic everyday Pakistani online buyer English ("Same as shown in the picture", "Good quality and working perfectly", "Very good value for money, recommended", "Satisfied with product").
-  * Batch Mix: In each batch of reviews, generate mostly Roman Urdu with 1-2 simple English reviews.
-- Tone: Genuine, spontaneous, and relatable.
-- Phrasing & Vocabulary: Use simple, natural everyday words common to Pakistani buyers in both English and Urdu. Avoid bookish Urdu, formal English, or artificial wording. NEVER create forced multi-item lists.
-  OVERUSED FILLER PHRASES & WORDS — STRICTLY BANNED (these appear bot-generated to human readers):
-    * "kaam fit hai" / "kaam asaan" / "kaam aasan ho gaya" — too robotic, NEVER use these phrases.
-    * "foran" — NEVER use this word (e.g. "foran thanda karta hai"). Use natural alternatives like "jaldi", "tezi se", or "minto mein".
-    * "Very good quality, working perfectly. Highly recommended." — banned as-is, far too generic
-    * "Excellent quality, working perfectly fine" — same problem
-    * "Good quality product, working perfectly. Highly recommended." — banned
-    * "Good product, working perfectly. Recommended." — banned
-    * "build quality solid hai" as the ONLY observation — must always be paired with a specific, product-appropriate detail
-    * "Motor tez hai, [X] jaldi [ho jata/ready ho jata] hai" — this exact structure is overused; vary it completely
-  Instead, ground every phrase in something specific to the actual product (e.g. blade sharpness, plate coating, jar size, heating speed, specific sound, etc.).
-- Gratitude & Platform Mention (SPORADIC — ~15-20% of batches only): Real shoppers do NOT mention the platform in every batch. When expressing thanks (e.g. for delivery, packing, or support), write "Thanks KiaChahye" (or "thanks kiachahye") instead of generic "boht shukriya", and naturally vary the phrase.
-- Punctuation: Natural human typing — full stops, exclamation marks, or casual endings. NEVER trailing dots ("....").
-- Names: Use a wide, diverse pool of real Pakistani names. CRITICAL: Do NOT repeat the same first name (e.g. "Ayesha", "Hamza", "Usman", "Sana") more than once within a single batch of reviews. Each review in a batch must have a clearly different person's name.
-  Suggested name pool (always vary — never repeat a name within the same batch):
-  Male: Bilal Ahmed, Danish Raza, Farhan Shah, Kashif Iqbal, Arslan Tariq, Kamran Aslam, Adeel Qureshi, Zubair Hassan, Faizan Malik, Umer Sheikh, Rizwan Butt, Haseeb Anwar, Saad Nawaz, Imran Javed, Asad Mehmood, Talha Yousuf, Noman Baig, Shoaib Aslam
-  Female: Amna Riaz, Farah Naz, Kiran Bajwa, Maham Iqbal, Nadia Tariq, Rabia Aslam, Rida Fatima, Iqra Nawaz, Hira Saleem, Zainab Mehmood, Laraib Hassan, Madiha Sheikh, Aroha Khan, Sadia Shaheen, Nimra Cheema
-</persona_and_style>
-
-<length_and_tier_structure>
-All reviews must follow one of three distinct tiers. Every batch must contain at least one Tier 1 review.
-
-TIER 1 — "SEEDHI BAAT" (5–10 words, Ultra-Short):
-  Direct 1-sentence verification. Grounded in the specific product — NOT a generic filler.
-  The example phrases below are for FORMAT ONLY — always generate something fresh and product-specific:
-    - "Blades boht sharp hain, masala secondon mein pees jata hai." (for grinder)
-    - "Same as shown in the picture." (delivery/unboxing)
-    - "Cooling achi hai, compressor bilkul silent chalta hai." (for AC/fridge)
-    - "Very good product, satisfied with purchase." (generic English)
-    - "Non-stick coating sach mein acha hai, kuch chipakta nahi." (for pan/roti maker)
-    - "Subah order kiya shaam ko deliver ho gaya." (delivery)
-    - "Packing solid thi, original sealed pack mila." (unboxing)
-    - "Is rate mein best option hai, recommended." (value)
-  CRITICAL: Tier 1 must reflect something specific about THIS product — not a copy-paste generic phrase.
-
-TIER 2 — PRACTICAL FEEDBACK (12–25 words, Short & Crisp):
-  1–2 sentences of realistic everyday observation grounded in what the specific product actually does.
-  The example phrases below are for FORMAT ONLY — always generate fresh product-specific content:
-    - "Heating tezi se hoti hai aur crease bilkul nikalti hai, handle ka grip bhi comfortable hai." (iron)
-    - "Good product came in secure packing, works as expected." (generic English)
-    - "Plug karte hi cooling shuru ho gayi, compressor awaz bilkul nahi karta." (fridge/AC)
-    - "Very spacious capacity, easy to use for the whole family." (large appliance)
-    - "Jar ka lock tight hai aur leakproof bhi — chutney aur masala dono perfect banta hai." (blender/chopper)
-
-TIER 3 — DETAILED BUYER EXPERIENCE (30–45 words max, RARE — ~20% of products only):
-  2–3 sentences max. Unboxing, family context, or first-use observation.
-  NEVER an essay. NEVER claim long durations like "5 mahine ho gaye".
-  The example phrases below are for FORMAT ONLY:
-    - "Ghar ke upper portion ke liye mangwaya tha. Karachi mein subah order kiya shaam ko deliver hogaya. Cooling bhi achi hay aur overall experience is good. Thanks kiachahye"
-    - "Overall boht satisfying experience raha, packing solid thi aur product bhi working perfect hai. Recommended."
-    - "Pehle knob ki setting thori samajh nahi aayi thi, WhatsApp kiya toh team ne turant clear kar diya. Product itself is great."
-    - "Behen ke ghar ke liye order kiya, 2-3 din mein safely pohanch gaya. Plates solid hain aur nonstick bhi genuine lagta hai."
-</length_and_tier_structure>
-
-<delivery_logistics_guidelines>
-BRAND-SPECIFIC DELIVERY RULES — follow these exactly:
-
-WESTPOINT & ANEX PRODUCTS:
-  KiaChahiye.com does NOT offer same-day delivery for WestPoint or Anex.
-  ALL delivery references for WestPoint/Anex must be standard courier language:
-    "2-3 din mein deliver hua", "parcel safely pohanch gaya", "time par mil gayi", "packing safe thi"
-  NEVER under any circumstance write same-day delivery for WestPoint or Anex.
-
-MAJOR APPLIANCE BRANDS (Haier, Dawlance, Gree, TCL, Orient, Pel, Kenwood, etc.):
-  Karachi and Lahore → signature SAME DAY DELIVERY (Occasional only — do NOT mention in every batch):
-    Vary phrasing: "Shaam tak deliver ho gaya", "Same day delivery mil gayi, recommended", "Subah order kiya shaam tak rider aa gaya", "Fast delivery and safe parcel".
-  Other cities (Multan, Peshawar, Faisalabad, Rawalpindi, Quetta, etc.) → 2–3 days.
-
-DELIVERY MENTION RULE:
-  - Mention delivery or courier in AT MOST ONE review per batch!
-  - In fact, most batches should NOT mention delivery at all — focus directly on product performance.
-  - STRICTLY FORBIDDEN — overused verbatim delivery phrases (bot red flags):
-    * "Parcel 2-3 din mein safely mil gaya" — banned as-is, too repetitive across catalog
-    * "Parcel 2-3 din mein safely pohanch gaya" — banned as-is
-    * "Parcel safely pohanch gaya" — banned as-is
-  - Instead, vary delivery phrasing naturally each time:
-    * "3 din mein ghar tak pahunch gaya", "courier ne time se deliver kiya", "packaging theek thi aur product safe nikla",
-      "delivery mein koi issue nahi tha", "rider time par aaya", "parcel seedha ghar tak mila"
-  - NEVER repeat the same delivery phrase across different products in the catalog.
-  - Do NOT mention a city name in every review (at most 1 per batch).
-</delivery_logistics_guidelines>
-
-<value_added_services_guidelines>
-KiaChahiye.com provides FREE installation and setup for major home appliances:
-  (Washing Machines, Air Conditioners, Geysers, Kitchen Hoods, Water Dispensers, Built-in Ovens/Hobs, LED TVs, Refrigerators, Deep Freezers)
-
-WHEN to highlight: ONLY when the user prompt includes <free_installation_directive>.
-  → Then ONE review should naturally and casually mention free installation.
-  → Natural phrases: "Installation bhi free kar di, thanks kiachahye!", "Delivery ke sath installation bhi free thi.", "Free install ho gaya, boht achi service hai."
-
-WHEN NOT to highlight: If <free_installation_directive> is absent, do NOT mention installation.
-  → Focus on product performance, delivery, and build quality only.
-  → NEVER mention installation for small gadgets (blenders, irons, kettles, sandwich makers, trimmers).
-</value_added_services_guidelines>
-
-<customer_service_experience_guidelines>
-CUSTOMER SERVICE & ISSUE RESOLUTION (SPORADIC — ~8-10% of products only):
-KiaChahiye.com provides responsive WhatsApp and phone customer support. Real buyers occasionally mention their interaction with customer service.
-
-- SPORADIC FREQUENCY: At most ONE review in ~8-10% of batches across the catalog (roughly 1 in every 10–12 products). Most batches should NOT mention customer service at all.
-- Permitted Scenarios:
-  1. Helpful Guidance & Cooperative Support (casual, embedded naturally in the review):
-     The product observation and the support mention should flow as ONE natural sentence — not two separate robotic cause-effect statements.
-     CRITICAL ANTI-PATTERN: NEVER write formulaic "X hua, Y solve ho gaya / kaam aasan ho gaya" endings. This sounds like a bot template.
-     BAD (avoid): "Toast boht achi banti hai, bas lever thora stiff hai. Support team ne WhatsApp par guide kiya, kaam aasan ho gaya."
-     BAD (avoid): "Setting samajh nahi aa rahi thi, contact kiya, kaam aasan ho gaya."
-  2. Issue Resolution Story (Extremely High Realism & Trust):
-     A buyer received the product, had a minor setup confusion or transit query, contacted customer care, and the team helped — written exactly as a real buyer would type it on their phone.
-     GOOD Examples (use diverse fresh versions — never copy these directly):
-       * "Product acha hai, pehle knob ki setting thori confuse kar rahi thi toh WhatsApp kiya — bhai unhone turant samjha diya, cooperative team hai."
-       * "Delivery time par aayi, aur ek choti si query thi jo unhon ne WhatsApp par resolve kar di. Customer service boht helpful lagi."
-       * "Customer service is very helpful. They communicated professionally and resolved my query promptly."
-       * "Product acha hay bas aik masla aya go unhoney resolve karwadya contact karney par, very cooperative customer service."
-       * "Thori confusion thi setup mein toh contact kiya, WhatsApp par seedha reply aaya aur issue clear ho gaya. Satisfied."
-       * "Ek chiz samajh nahi aayi thi installation mein, WhatsApp karney par helpful response mila. Overall experience acha raha."
-- STYLE RULE: The customer service mention must feel like a spontaneous afterthought, NOT a structured conclusion. It should read like a buyer casually mentioned it while typing their review — not a formal complaint-resolution sentence. Keep it short and off-the-cuff.
-- RULE: Never mention customer service more than once in a batch. Must feel completely spontaneous.
-</customer_service_experience_guidelines>
-
-<rating_guidelines>
-5 Stars: Highly satisfied. Genuine praise for product performance, build quality, and value for money.
-4 Stars: Strong positive review confirming product works great, with one casual minor observation. Core performance must be praised.
-3 Stars (Authentic Daraz Buyer Style — High Realism, Zero Fatal Flaws):
-- Golden Formula: [Core Hardware Works 100% Solid] + [Exactly ONE Realistic Minor Friction Point].
-- Conversion Protection: Core performance (cooling, heating, motor, blades, sound, screen) MUST ALWAYS be confirmed as solid and functional.
-- Permitted Diverse Friction Pool (DO NOT repeat the same friction like 'extension cord' across products! Pick diverse, category-appropriate points):
-  * Delivery & Rider Delay (MUST explicitly state 'Late' or 'Slow'): Courier ne deliver karne mein kafi delay kiya / 4-5 din lag gaye, delivery late mili, tracking slow thi, ya rider ne aane se pehle call nahi ki.
-    CRITICAL: NEVER write a neutral 'parcel 3-4 din mein mila' as a complaint! In 3-star reviews: 'delivery late mili'.
-  * Unboxing & Packaging: Carton over-taped with too much packing tape (took 10 mins to open), outer box thora daba howa tha, or box was dusty.
-  * Ergonomics & Sensory: Max speed par sound thora zyada hai, glossy surface par fingerprints aate hain, lid lock pehle din tight tha, water inlet connector tight fit tha, button thora stiff press hota hai, ya standby LED raat ko bright lagti hai. - no use of foran word please like "foran khatam"
-  * Capacity / Sizing (COMPACT GADGETS ONLY): Mini-fridge, mini-chopper, personal blender ya travel iron mein capacity joint family ke hisab se thori compact lagi to do dafa mein kaam karna para (STRICTLY FORBIDDEN on standard/family appliances like 8+ Cu Ft fridges or 7+ KG washers).
-  * Accessories & Cord: Wire length thori choti thi ya 3-pin plug ke liye adapter lena para (use this sparingly, NOT on every product).
-
-- Authentic Daraz Real Buyer Linguistic Anchors (Direct from Daraz Shoppers):
-  * 5 Stars (Praise, Build & Platform):
-    - "very good value for money and recommended. Best price"
-    - "same as shown in the picture."
-    - "I am satisfied to this product. Too good and brand new product. Thanku KiaChahye"
-    - "good product came in secure packing. Definitely recommend this product"
-    - "Good quality. Reached within one day. Complete in original condition. Working perfectly."
-    - "Very nice product same as shown in pictures"
-    - "mashallah se bahout Ache machine haa or motor ki speed bhi tez haa thanks kiachahye"
-    - "Recommnded Price with free delivery and installation"
-    - "Quality aur customer services best thi."
-    - "Very spacious and beautiful fridge in very good price"
-    - "Overall a good product and looks all fine so far. Thanks kiachahye"
-    - "I am very happy with this product. Very beautiful model. Thanks kiachahye"
-    - "the fridge is excellent in terms of cooling and quality. received on time"
-    - "Fridge bilkul silent hai aur thanda boht tezi se karta hai."
-    - "Pehle semi-automatic thi, leken is se kaam boht asaan ho gaya. Motor power zabardast hai aur kapray bilkul saaf dho leti hai."
-    - "Achi quality hai, delivery ke sath installation bhi free kar di."
-    - "I recived my order bohat hi zabardast hy same wesa hi hy jysy picture main tha thanks kiachahye"
-  * 4 Stars (Strong Performance with Minor Observation / Friction):
-    - "mashallah se bahout Ache machine haa bas pip thora chota hay"
-    - "Overall a good product and looks fine but noise sound hay but not too much"
-    - "Packaging was awesome product bhi bohat acha lag raha hay leken delivery late hoye"
-    - "product is really fantastic but the delivery was late. overall experience is pretty good."
-    - "good service. parcel delivered very soon and quality overall good"
-    - "Machine silent aur solid hai, bas tap connector pipe thora tight tha lagate waqt."
-    - "Same day delivery mil gayi, machine bhi bilkul silent hai. Bas tap connector thora tight tha."
-    - "Pehle pipe connection mein confusion thi, contact karney par issue resolve ho gaya."
-    - "Iron kapray bilkul crisp press karta hai, heating teez hai. Bas water spray wala button thora hard press hota hai."
-    - "Juicer original hai aur kaam secondon mein karta hai, bas sound thori zyada hai high speed par. Overall value for money."
-    - "Is rate mein inverter fridge boht achi value hai. Bas thora sa bend hay grill mey"
-    - "the products are good I have been ordering them from while"
-    - "Product theek chal rahi hai lekin delivery late mili."
-    - "Washing machine was delivered few days late but product was good"
-    - "Motor theek kaam kar rahi hai lekin courier ne delivery mein 3 din laga diye, thora late hua."
-    - "Product sahi hay Bas power cord thori short hai, extension lagana para. Baqi kaam fit hai."
-
-
-- STRICTLY FORBIDDEN:
-  * NEVER claim the product is broken, fake, non-functional, dead on arrival, smoking, sparking, or has a smell ("smell aayi", "halki smell", "jalne ki smell").
-  * NEVER repeat 'wire choti thi / extension lagana para' across multiple reviews. Use the rich variety above.
-</rating_guidelines>
-
-<negative_constraints>
-1. ZERO TIME-CONTRADICTION: NEVER use multi-month or multi-year durations.
-   Banned: "5 mahine ho gaye", "3 mahine se use kar rahe hain", "1 saal se chal raha hai".
-   All reviews must reflect immediate delivery, unboxing, or short-term testing only.
-   Allowed: "Same day delivery mil gayi", "Kal hi receive hua", "2-3 din se check kiya", "1 hafte se use ho raha hai".
-
-2. ZERO SPEC-SHEET PARAPHRASING & NO RAW TECHNICAL NUMBERS:
-   - NEVER quote raw technical spec numbers or units from the title into the review text.
-     Banned: "40cm pan", "11 cu ft fridge", "2.5 cu ft", "600W motor", "700ml jar", "1.5 ton ac", "8.5kg machine".
-     Required: Express size and power in natural everyday Pakistani buyer words:
-       * Instead of "40cm pan" -> "khas tor par bara pan hai", "size kafi acha hai", "bara pizza araam se banta hai".
-       * Instead of "11 cu ft" -> "size bhi sahi hai", "size bhi acha hay".
-       * Instead of "2.5 cu ft" -> "choti fridge hai", "room ke liye compact size hai".
-       * Instead of "600W motor" -> "motor teez hai", "kaam jaldi ho jata hai".
-   - NEVER translate product specs into future warranty/efficiency claims.
-     Banned (future-tense spec claims): "bijli ka bill kam aayega", "motor 5 saal chalegi", "energy saving hoga".
-     Required: Express immediate sensory experience only: "compressor bilkul silent hai", "thandi hawa tezi se aane lagi", "motor smooth chal raha hai".
-
-3. NEVER OPEN WITH SPEC TRANSLATION: Do not start reviews with "Digital inverter hai isliye...", "1500W motor hai toh...", etc.
-   Open with a human reaction, delivery experience, or sensory usage observation.
-
-4. NO HOSTEL REFERENCES: Never mention "hostel", "hostel room", or bachelor dorm. Use authentic homes, rooms, families, offices.
-
-5. NO MANUAL MENTIONS: Never mention reading user manuals, instruction booklets, or setup paperwork.
-
-6. NO AI BUZZWORDS: Never use "craftsmanship", "unmatched", "unrivaled", "game-changer", "sleek design", "pinnacle", "epitome", "boasts", "seamlessly blends", "testament to".
-
-7. NO FORMAL URDU: Never use literary/book-style Urdu vocabulary. Keep register casual and WhatsApp-authentic.
-
-8. DIVERSITY OF OPENINGS: Vary how each review starts across the batch.
-   Mix of: "Subah order kiya shaam ko mil gaya", "Rider ne pehle call ki", "Original sealed pack mila", "Build quality solid hai", "Is price mein best option hai", "Bhai maza aa gaya".
-
-9. NO TRAILING DOTS: Never end reviews with "...." or "...".
-
-10. VARIED LENGTHS: Never make all reviews in a batch the same length. Mix Tier 1 and Tier 2 naturally.
-
-11. DELIVERY MUST BE A CLEAR COMPLAINT in 3-star reviews: NEVER write a neutral statement like "parcel 3-4 din mein aaya" as a complaint. Always explicitly state that delivery was late/slow: e.g. "delivery late mili", "courier boht slow tha", "rider ne delay kiya".
-
-12. FEATURE/TOPIC REPETITION IN A BATCH: Never make multiple reviews in the same batch talk about the exact same feature or mechanism. Every review in a batch must highlight a DIFFERENT natural angle (one on delivery/unboxing, one on a specific product feature, one on build). CRITICAL EXAMPLE: If one review already mentions "high speed par sound thora zyada hai" — NO OTHER review in the same batch may mention sound/noise at all.
-
-13. NO "BOHT SHUKRIYA": When expressing thanks (for delivery, packing, installation, or service), do NOT use generic "boht shukriya". Use "thanks kiachahye" or "Thanks KiaChahye" organically (and only sporadically in ~15-20% of batches, never forced on every product).
-
-14. ZERO COOKIE-CUTTER REPETITION & DIVERSE VOCABULARY (MAXIMUM REALISM):
-   - Real online shoppers write spontaneously — they never use the same fixed canned sentences.
-   - STRICTLY BANNED repeated structures across the entire catalog (sound bot-generated to any human reader):
-     * "[X] tez hai, [Y] jaldi [ho jata/ready ho jata] hai" — broken record structure, banned
-     * "[Product part] solid hai aur [feature] bhi [adjective] hai, bas [X] thora [Y] hai" — copy-paste template, banned
-     * "Excellent [noun], [adjective] build and very easy to [verb]." — robotic English template, banned
-   - Every review in the entire batch — and across the whole catalog — must feel like a genuinely different human typed it spontaneously on their phone.
-
-15. NEVER COPY EXAMPLES: The few-shot examples are strictly for format illustration. NEVER copy or adapt sentences, phrases, or names from the examples. Always think independently and generate fresh, original reviews tailored to the target product in <product_title>.
-
-16. ZERO "SMELL" OR ELECTRICAL DEFECT CLAIMS: NEVER mention burning smell, "smell aayi thi", "halki smell", or chemical odor. Real Pakistani shoppers take this as cheap burning plastic or defective wiring! Stick ONLY to safe observations (sound on max speed, stiff buttons, tight lid/tap connector, courier delay).
-
-17. NAME UNIQUENESS PER BATCH: Within a single batch of reviews, every reviewer must have a visibly different name. Do NOT use the same first name twice in the same batch (e.g., two "Ayesha" or two "Hamza" is forbidden). Refer to the diverse name pool in <persona_and_style>.
-</negative_constraints>
-
-<example_guidance>
-Examples below illustrate JSON formatting only. Do NOT copy text from them — synthesize completely original reviews for each product.
-</example_guidance>
-
-<examples>
-
-<example>
-<product_title>Haier HR-66B 2.5 Cu Ft Single Door Refrigerator</product_title>
-<ratings>[5, 4, 5]</ratings>
-<output>
-[
-  {"name": "Bilal Farooqi", "rating": 5, "review": "Working perfectly, 100% satisfied"},
-  {"name": "Aliza Tahir", "rating": 4, "review": "Plug karne ke thori der baad cooling shuru ho gayi, compressor silent hai. Thora packaging theli par crease tha."},
-  {"name": "Usman Tariq", "rating": 5, "review": "Is rate mein achi cheez hai, room ke liye perfect size hai."}
-]
-</output>
-</example>
-
-<example>
-<product_title>WestPoint WF-9216 700ml Deluxe Hand Blender Set</product_title>
-<ratings>[5, 4, 3]</ratings>
-<output>
-[
-  {"name": "Hina Tariq", "rating": 5, "review": "Motor speed boht teez hai, highly recommended!"},
-  {"name": "Usman Ghani", "rating": 4, "review": "Attachments solid hain aur daily kitchen mein fit use ho raha hai."},
-  {"name": "Khurram Shehzad", "rating": 3, "review": "Product is good but delivery was late."}
-]
-</output>
-</example>
-
-<example>
-<product_title>Dawlance 1.5 Ton Mega T-Pro Inverter Air Conditioner</product_title>
-<ratings>[5, 4, 5]</ratings>
-<output>
-[
-  {"name": "Naveed Zafar", "rating": 5, "review": "Free delivery aur installation time par ho gayi, thanks kiachahye"},
-  {"name": "Usama Rafiq", "rating": 4, "review": "Cooling fast hai aur sound bilkul kam hai, bas remote ke buttons thora stiff hain."},
-  {"name": "Asad Ali", "rating": 5, "review": "Very beautiful model and chilling cooling."}
-]
-</output>
-</example>
-
-</examples>
-
-<output_format>
-Return STRICTLY a valid JSON array (starting with "[" and ending with "]"). No markdown, no backticks, no explanation outside the array.
-[
-  {"name": "<Pakistani Name>", "rating": <int>, "review": "<review text>"}
-]
-</output_format>
-</system_instructions>
-"""
-
+# ---------------------------------------------------------------------------
+# Module-level Constants
+# ---------------------------------------------------------------------------
 
 INSTALLATION_KEYWORDS: tuple[str, ...] = (
     "air conditioner",
@@ -411,6 +24,653 @@ INSTALLATION_KEYWORDS: tuple[str, ...] = (
     "floor standing",
     "geyser",
 )
+
+MAJOR_APPLIANCE_BRANDS: tuple[str, ...] = (
+    "haier",
+    "dawlance",
+    "gree",
+    "tcl",
+    "pel",
+    "orient",
+    "kenwood",
+)
+
+# ---------------------------------------------------------------------------
+# Category Detection — maps product title keywords to focused vocab banks
+# ---------------------------------------------------------------------------
+
+CATEGORY_KEYWORDS: dict[str, list[str]] = {
+    "refrigerator": ["refrigerator", "fridge", "freezer", "deep freezer", "hr-", "hrf-"],
+    "dishwasher": ["dishwasher", "dish washer", "ddw-"],
+    "washing_machine": ["washing machine", "clothes washer", "semi automatic", "twin tub", "hw-", "spin dryer", "spinner machine", "dryer machine"],
+    "ac": ["air conditioner", "inverter ac", "split ac", "floor standing", "ton ac", "hsu-"],
+    "blender": ["blender", "chopper", "grinder", "juicer", "spinner juicer", "citrus juicer", "food processor", "kitchen chef", "mixer", "hand blender"],
+    "roti_maker": ["roti maker", "chapati maker"],
+    "air_fryer": ["air fryer"],
+    "toaster": ["toaster", "toast"],
+    "iron": ["iron", "steam iron", "dry iron", "garment steamer"],
+    "kettle": ["electric kettle", "kettle"],
+    "microwave": ["microwave", "oven"],
+    "water_dispenser": ["water dispenser", "dispenser"],
+    "heater": ["heater", "fan heater", "room heater", "sun heater", "halogen heater", "quartz heater"],
+    "straightener": ["straightener", "hair straightener", "styling tool", "flat iron", "straightening brush"],
+    "hair_dryer": ["hair dryer", "blow dryer", "hair blow"],
+    "curler": ["curler", "hair curler", "curling iron", "curling wand"],
+    "trimmer": ["trimmer", "clipper", "shaver", "hair clipper"],
+    "led_tv": ["led tv", "smart tv", "android tv", "google tv", "qled"],
+    "humidifier": ["humidifier"],
+    "geyser": ["geyser", "water heater", "instant geyser"],
+    "pizza_pan": ["pizza pan", "pizza maker"],
+    "sandwich_maker": ["sandwich maker", "panini"],
+    "hot_plate": ["hot plate", "hotplate"],
+    "scale": ["scale", "weight scale", "digital scale", "bath scale", "kitchen scale"],
+    "insect_killer": ["insect killer"],
+    "spray_mop": ["spray mop", "mop"],
+    "fries_cutter": ["fries cutter", "slicer", "manual slicer"],
+    "coffee_maker": ["coffee maker", "coffee machine", "espresso"],
+    "cooler": ["air cooler", "room cooler", "evaporative cooler", "room air cooler"],
+    "fan": ["table fan", "pedestal fan", "tower fan", "ceiling fan", "velocity fan", "bladeless fan"],
+    "cooker": ["ceramic cooker", "induction cooker", "rice cooker"],
+    "vacuum_cleaner": ["vacuum cleaner", "vacuum"],
+    "air_purifier": ["air purifier"],
+    "dehumidifier": ["dehumidifier"],
+}
+
+# Category-specific vocabulary banks — only the matching one gets injected
+CATEGORY_VOCAB: dict[str, str] = {
+    "refrigerator": (
+        "Real buyers say: cooling bht fit hy bilkul chilled kar deta ha, compressor ki awaz bilkul nahi, "
+        "ammi boht khush hoi, packing bht safe thi tut na jaye dar tha, color same aya, "
+        "chilled water in 15 mins, warranty card stamped mila. "
+        "4-star complaints: side py halka sa scratch delivery k waqt, handles thore nazuk lag rahe, "
+        "wire b choti hy, delivery 3 din late. "
+        "3-star: chalta theek hy par body thori halki lagi guzara ha, cooling normal ha koi itni khaas nai."
+    ),
+    "washing_machine": (
+        "Real buyers say: kapray bilkul saaf dhoti hy, spin speed boht fast 5 mint me almost sookh, "
+        "time ki boht bachat h, ammi bht khush hain, awaz bilkul shor nahi karti, "
+        "direct tap water se connect ho jati hai. "
+        "4-star complaints: drain pipe thora chota alag se lgana para, water pressure high hona chahiye "
+        "wrna error de deti, body plastic ki hai ehtiyat se use krna. "
+        "3-star: spin k doran thora hilte vibrate krti, motor garam ho jati lagatar chalayein, guzara hy."
+    ),
+    "ac": (
+        "Real buyers say: room ko 10 mint me chil bana deta hy, bijli kam khata meter slow chalta, "
+        "bill me wazeh farq aya hy 4 ampere py chal raha, chilled cooling heating feature b check kia, "
+        "zero noise level, installation team jaldi agai. "
+        "4-star complaints: outdoor unit thora awaz karta, box thora phata hua tha daraz riders ne "
+        "dhang se handle nai kia, remote k cell sath nahi bheje. "
+        "3-star: cooling theek hy normal ha boht super chilled nahi krta, inverter board trip kr jata low voltage py."
+    ),
+    "blender": (
+        "Real buyers say: milk shake 1 minute me ban jata hy baraf b achi crush krta, blades bht sharp "
+        "masala b pis jata hy, ammi k liye lia tha unko bht psnd aya, motor ki awaz normal, "
+        "jug plastic heavy duty, full paisa wasool. "
+        "4-star complaints: thori plastic ki smell ati shuru me chalao to, pulp container thora chota "
+        "jaldi bhar jata, jug ka lock thora tight zor lagana prta. "
+        "3-star: motor jaldi garam ho jati 2 minute se ziada chalao, blades itne sharp nahi tukray reh jatay."
+    ),
+    "roti_maker": (
+        "Real buyers say: practice chahye pehle din kharab ab boht narm phooli hui roti banti hy, "
+        "subah bacho k lunch k liye jaldi ban jati, non stick coating achi atta nahi chipakta, "
+        "hostel walo k liye best bahir ki roti se jan chooti, plate garam jaldi hoti hai. "
+        "4-star complaints: kinare thode kache reh jate hain haath se dabana parta, cord boht choti "
+        "extension board use krna prta, aata narm goondhna parta wrna roti papad ban jati. "
+        "3-star: itna asaan nai jesa video me dikhate hain, handle plastic ka bht halka toot jaye ga."
+    ),
+    "air_fryer": (
+        "Real buyers say: bina oil k crispy fries bante hain healthy diet walo k liye, chicken tikka "
+        "20 mint me juicy bake, basket size kafi bara touch panel smooth, chicken wings crispy oil free, "
+        "paisa wasool cooking asaan ho gai. "
+        "4-star complaints: capacity thori kam bari family k liye 2 bar chalana prta, recipe book Urdu me "
+        "honi chahiye thi, shuru k 2 din plastic burning smell ab theek. "
+        "3-star: fries crunch nahi hote jese oil me dry ban jate, non stick coating pehli wash me scratch."
+    ),
+    "toaster": (
+        "Real buyers say: bread bilkul even brown jaldi nahi hy kids enjoy, 1 se 6 settings 3 pe "
+        "perfect toast, chota compact kitchen counter pe jagah kam, crumb tray nikal k saaf karna asan, "
+        "roz subah time bachta hy. "
+        "4-star complaints: bara bread slice pura andar nahi ata bahir reh jata, level 4 se ooper "
+        "bread jal jati setting sensitive, body thori garam ho jati bahir se. "
+        "3-star: lever thora tight zor lagta plastic halka, aik side ziada brown dosri kam uneven heating."
+    ),
+    "iron": (
+        "Real buyers say: purane zamane wali quality wazan acha kapray pe dabao ki zrurat nai, "
+        "smooth gliding teflon base kapre jalte nahi, steam powerful wrinkles aik second me gayab, "
+        "cord 360 ghoomti ulajhti nahi, thermostat accurate cut off karta. "
+        "4-star complaints: steam me pani leakage ka halka dar spray button hard, taar ki length "
+        "choti board pass hona chahiye, packaging thori dabbi hui thi. "
+        "3-star: steam tanki bht choti bar bar refill, maximum heat pe kapray chipakte, weight normal purani baat nahi."
+    ),
+    "kettle": (
+        "Real buyers say: 2 minute me pani full ubaal gas ki load shedding me naimat, steel body "
+        "mazboot auto shut off perfect dry burn ka darr nahi, hostel k room maggie chai mints me, "
+        "pure stainless steel no plastic smell boil hotay hi click off. "
+        "4-star complaints: wire base thori loose table pe sahi rkhna prta, bahir se steel body bht "
+        "garam hath lagane se bachein, handle ka plastic thora rough. "
+        "3-star: 2 haftay me bottom pe white spots scale jam gaye, auto cutoff kbi kaam krta kbi nahi dar lagta."
+    ),
+    "microwave": (
+        "Real buyers say: salan garam krne k liye best, 30 sec me tea garam kar deta, buttons controls "
+        "simple ammi asani se use kar leti, defrost zabardast gosht 5 mint me normal, "
+        "glass turn table smooth ghoomti no extra noise. "
+        "4-star complaints: andar ki light thori dim bahir se khana nahi dikhta, power cord choti, "
+        "door push button thora hard dabana parta. "
+        "3-star: heating thori slow pehle wale k mukable time double, body sheet metal patla dabta hy, guzara."
+    ),
+    "water_dispenser": (
+        "Real buyers say: thanda pani jaldi chilled compressor bilkul silent, glass door look luxury "
+        "taps soft leakage zero, refrigerator cabinet niche fruits cold drinks chilled, "
+        "child safety lock garam tap pe, garmiyo k liye blessing. "
+        "4-star complaints: bottle collar plastic thora loose lagta, compressor on hotay waqt thora "
+        "vibrate halka sound, delivery 2 din late baki overall theek. "
+        "3-star: cold water itna thanda nahi jitna purane me hota tha, mini fridge cooling nahi sirf naam ka cabinet."
+    ),
+    "heater": (
+        "Real buyers say: 2 rods on karo pura kamra warm gas ki kami me best, tip-over switch safe "
+        "giray to khud band, chota portable aik kamre se dosre le jana asan, red glowing light pyari, "
+        "paisa wasool low electricity consumption. "
+        "4-star complaints: body ka plastic halka heat se smell pehle ghante, taar moti honi chahiye "
+        "plug warm ho jata, baray hall me asar kam small room k liye. "
+        "3-star: room band kar k ghanta chalao tab farq, aik rod doosre din fuse ho gai, guzara hy."
+    ),
+    "straightener": (
+        "Real buyers say: curly baal aik swipe me pin straight smooth finish, salon jesa look ghar pe "
+        "temperature control buttons ache, heat 30 seconds me full ceramic plates baal nahi kheenchtin, "
+        "cord 360 rotate styling easy, hair silk shiny jalne ki smell nahi. "
+        "4-star complaints: plates thori choti ghane baalon k liye time ziada, bahir se outer body "
+        "thori garam hoti, heat pouch sath nahi bheja travel issue. "
+        "3-star: frizzy baal theek se straight nahi heat maximum pe kam, plates me gap press krna prta finish khas nahi."
+    ),
+    "hair_dryer": (
+        "Real buyers say: powerful air throw 5 mint me baal dry, cold shot button zabardast, "
+        "light weight hath thakta nahi blow dry k waqt, winter me subah office jane se pehle life saver, "
+        "speed settings dono smooth nozzle best results. "
+        "4-star complaints: taar thori choti mirror se plug door extension lagani, burning plastic smell "
+        "high speed pe, packing carton thora damage delivery boy ki wajah se. "
+        "3-star: awaz boht ziada jese jet plane ho heat control mushkil, body plastic halki handle garam build local."
+    ),
+    "curler": (
+        "Real buyers say: beach waves 10 minute me pura head curl, barrel smooth baal ulajhte nahi "
+        "curls sham tak stay, ceramic coating achi heat up jaldi wedding function perfect look, "
+        "clamp tight baalon pe grip, salon jesi tight curls temperature indicator work karta. "
+        "4-star complaints: barrel size thora bara short hair pe curl mushkil, stands weak table pe "
+        "balance nahi gir jata, styling spray k bina curls jaldi khul jate. "
+        "3-star: curls zra der nahi rukte 1 ghante me straight, clamp loose baal slip hath jalne ka khatra."
+    ),
+    "trimmer": (
+        "Real buyers say: zero cut bilkul clean skin pe lagta nahi, 1 charge pe 4 dafa beard aram se, "
+        "blade sharp smooth baal kheenchy bina, usb charging power bank se b charge, "
+        "salon k kharche khatam clean shave zero trimming. "
+        "4-star complaints: charging indicator light color change nahi pta nai kab full, oil ki bottle "
+        "packaging me leak ho gai, thora vibration ziada hath me. "
+        "3-star: heavy beard pe phans k chalta baal khenchta, plastic combs halkay clip loose ho gya battery 20 mint bus."
+    ),
+    "led_tv": (
+        "Real buyers say: colors boht vibrant 4k video smooth, Netflix YouTube lag free voice control "
+        "Google assistant kamal, display zabardast sound bar zaroorat nahi speakers bass clean, "
+        "panel borders thin slim smart look, wifi jaldi pakar leta screen mirroring fast. "
+        "4-star complaints: wall mount bracket sath nahi bheja alag lena para, 1gb ram heavy apps pe "
+        "slow restart, delivery boy akele aya heavy box help karni pari. "
+        "3-star: viewing angles side se picture wash out white, sound tinny bilkul bass nahi speaker phat-te unchi awaz."
+    ),
+    "humidifier": (
+        "Real buyers say: mist throw strong winter dry throat khansi k liye best, 7 colors led "
+        "aesthetic look bedroom night lamp ka kaam, aroma essential oil pura kamra khushboo, "
+        "chota portable desk pe fit aik refill me pura din, ultrasonic mist silent. "
+        "4-star complaints: charging cable choti switch pass hona zaroori, tanki safai mushkil, "
+        "room bara ho to mist ka asar kam small room k liye. "
+        "3-star: table pe paani jama ho jata floor wet, button touch kbi do bar dabana plastic halki girne se crack."
+    ),
+    "geyser": (
+        "Real buyers say: tap kholo 5 second me garam pani shuru, low gas pressure pe auto ignite, "
+        "copper pipes heavy quality thermostat accurate, winter savior cold water tension khatam, "
+        "bijli gas dono bachat batteries 6 mahine chal jati. "
+        "4-star complaints: water pressure sensor thora sensitive pump on krna prta, installation kit "
+        "pipes quality normal bahir se li, ignition cells box sath nahi aye market se. "
+        "3-star: gas low ho to bar bar flame band pressure stabilizer, temperature knob regulate nai ya ubalta ya normal."
+    ),
+    "pizza_pan": (
+        "Real buyers say: 15 mint me crust crispy cheese fully melt oven ki zaroorat nahi, non stick "
+        "coating top class bilkul nahi chipakta, pizza k ilawa chapati omelette shandar, "
+        "handle cool rehta pakadne safe, bacho k liye homemade pizza easy timer bell accurate. "
+        "4-star complaints: lid dhakkan ka glass delicate ehtiyat krni, thermostat switch thora loose "
+        "ghoomate waqt, cleaning me dhayan switch socket me pani na jaye. "
+        "3-star: upar se cheese brown nahi niche crust jal jati timer ziada ho, non stick coating jaldi peel off."
+    ),
+    "sandwich_maker": (
+        "Real buyers say: bread crisp triangle pockets perfect cut and seal, non stick plates cheese "
+        "chipakti nahi tissue se clean, 2 minute me crispy golden brown breakfast life saver, "
+        "indicator lights ready to cook batati, handle lock mazboot press pe nahi tootta. "
+        "4-star complaints: plates fixed removable nahi dhona mushkil, standard large bread thora bahir "
+        "nikal ata small size k liye, wire boht short board k pas rakh k banana. "
+        "3-star: handle lock clip pehle hafte toot gaya mota sandwich press me, heating uneven aik brown dosra kacha."
+    ),
+    "hot_plate": (
+        "Real buyers say: 1500w coil jaldi red hot chai salan mints me gas load shedding ka tod, "
+        "heavy cast iron plate har bartan adjust, hostel walo k liye best cooking companion, "
+        "temperature dial smooth, thermostat auto cut off over heat se bacha. "
+        "4-star complaints: shuru me coil se dhuwan smell pehli dafa, plate thandi hone me time bache "
+        "hath na lagayein, taar garam hoti full heat pe lamba use. "
+        "3-star: bijli boht khata meter fast bhagta sirf emergency chai, spiral coil uneven bartan balance nahi."
+    ),
+    "scale": (
+        "Real buyers say: 1 gram tak accurate baking recipes perfect, tare function bowl zero kar k "
+        "ingredients measure, clear LCD screen reading hold rehti, glass scale body weight track, "
+        "gym diet portion control asan ho gaya paisa wasool. "
+        "4-star complaints: surface plastic slippery flat surface pe rakh k measure, display backlight "
+        "nahi thora light me dekhna, tare button slow response aik second wait. "
+        "3-star: har bar wazan alag floor seedha na ho sensor balance, battery drain jaldi 10 din me cell change."
+    ),
+    "insect_killer": (
+        "Real buyers say: room me andhera karo machhar khud kheench k aate zapped, coil k dhuway se "
+        "jan chooti rat ko neend sukoon se, rechargeable racket shock powerful makhi machhar dher, "
+        "uv light bright grid safe bacho k hath nahi lagte, dengue season zaroori. "
+        "4-star complaints: room me light on ho to asar kam andhera chahiye, charging cable choti "
+        "switch board k sath latkana, chotay insects grid me phans jate brush se nikalna. "
+        "3-star: chotay fly nikal jate grid gap ziada, uv tube aik maheene me fuse market se nayi dhoondna mushkil."
+    ),
+    "spray_mop": (
+        "Real buyers say: balti uthane ki zillat se jan choot gai spray me floor chamak, microfiber "
+        "pad mota absorbent matti baal sab pakar leta, dettol pani dalo khushboo safai dono, "
+        "trigger smooth mist broad tile dry jaldi, pocha lagana thakawat nahi. "
+        "4-star complaints: bottle capacity 350ml kam bare lounge 2 bar bharni, rod fitting loose "
+        "screw tight krna para, extra microfiber pad aik hi mila do hone chahiye. "
+        "3-star: trigger 2 haftay baad phansna shuru spray throw nahi, bottle socket se paani leak ulta karo."
+    ),
+    "fries_cutter": (
+        "Real buyers say: aalu rakho handle dabao aik second me McDonald jesi fries, solid heavy metal "
+        "body zor se bend nahi, bacho k liye roz fries banana asaan finger cuts darr nahi, "
+        "do size grid blades clean wash asan, steel wala life time chalega. "
+        "4-star complaints: bara aalu ho to pehle half cut krna direct pura fit nai, suction base "
+        "counter pe grip nahi zoor lagao hilta, blades change hath bachana. "
+        "3-star: zor boht lagana aalu phans jata beech me, blade ka danda pehle din bend soft sabzi theek aalu weak."
+    ),
+    "coffee_maker": (
+        "Real buyers say: 15 bar pressure rich thick crema coffee shop jesa taste, steam frother milk "
+        "foam creamy cappuccino lovers k liye, 2 minute me fresh espresso shot heating fast, "
+        "portafilter heavy brass, roz cafe k 800 rupay bach jate homemade latte. "
+        "4-star complaints: cup warmer plate itni garam nahi cup pehle rinse, steam wand short bare "
+        "milk jug me deep nahi jati, pehle 2 bar water flush plastic wash. "
+        "3-star: coffee lukewarm nahi piping garam pakistani taste microwave krna, vibration ziada cup hil jata."
+    ),
+    "cooler": (
+        "Real buyers say: ice pack dalo AC jesi chilled hawa phenkta bijli kam, honeycomb pads thick "
+        "cooling zabardast 60 liter tank pura din, ups pe chal jata load shedding ka tod, "
+        "water pump silent wheels smooth move asan, plastic body shock proof current khatra nahi. "
+        "4-star complaints: fan speed 3 pe motor shor tv ki awaz band, honeycomb pads se pehle 2 din "
+        "ghaas smell ab theek, auto swing kabhi atak jata. "
+        "3-star: barsaat humidity me bilkul kaam nahi room chip chip, water pump aik maheene baad band pads sukhe."
+    ),
+    "fan": (
+        "Real buyers say: copper winding original hawa throw door tak motor garam nahi, pedestal speed 1 "
+        "pe toofani hawa metal blades balance perfect no vibration, silently kaam karta, "
+        "parts assembly 15 minute ready, height adjustment lever smooth. "
+        "4-star complaints: speed control knob plastic loose ghoomate waqt, base weight halka fan full "
+        "speed wobble, delivery carton side se phata hua tha. "
+        "3-star: awaz boht ziada raat neend kharab, oscillation atak atak gears plastic side ghoom k ruk jata."
+    ),
+    "cooker": (
+        "Real buyers say: touch buttons instantly respond 1 liter pani 2 mint boil, ceramic surface "
+        "clean cloth maro chamak flat cookware best, gas cylinder se hazar darje behter sasta, "
+        "timer set karo be-fikr, smart cooking presets daal chai fry auto temperature. "
+        "4-star complaints: internal exhaust fan shor ziada jab tak on rahe, sirf induction friendly "
+        "bartan accept plain pe E0 error, touch panel sensitive gila hath beeps. "
+        "3-star: bartan center se hiley to heating band sensors over sensitive, glass kinare pe metal ring nahi chip hone ka khatra."
+    ),
+    "vacuum_cleaner": (
+        "Real buyers say: suction power toofani carpet andar se barik dhool matti nikal leta, wet dry "
+        "feature floor pani suck sofa cleaning asan, drum capacity 18 liter jhanjhat nahi, "
+        "blower function computer grills dhool second me saaf, pipe accessories sab sath aye. "
+        "4-star complaints: awaz boht ziada motor sound pura mohalla sunta, taar length choti har "
+        "kamre me plug badalna, wheels carpet pe move phanste plain floor ok. "
+        "3-star: suction normal barik matti filter se blow out, hose pipe halka kheencho kink fold hawa ruk jati."
+    ),
+    "air_purifier": (
+        "Real buyers say: Lahore ki smog k liye lifesaver AQI 350 se 25 pe le aya, subah gale me "
+        "kharash band naak nahi HEPA filter cigarette smoke clear, Mi Home app connect mobile se "
+        "fan speed monitor, night mode silent zero sound fresh clean air. "
+        "4-star complaints: replacement HEPA filter costly 6 mahine badalna, indicator light raat "
+        "bright tape lagani, door band rakhna prta wrna sensor green nahi hota. "
+        "3-star: khushboo feel nahi bus hawa phenkta jese normal fan, filter Lahore pollution 2 maheene me 40% expensive."
+    ),
+    "dehumidifier": (
+        "Real buyers say: deewaro ki seelan ka hal kamre se roz 2 liter pani nichod, wardrob me "
+        "fungus musty smell khatam breathing fresh, compressor auto off tank full flood protection, "
+        "continuous drain pipe option, AC k sath cooling double chip-chipahat end. "
+        "4-star complaints: room temperature 1-2 degree warm exhaust heat se, unit wazan heavy wheels "
+        "smooth pr uthana mushkil, tank nikalte pani chalak jata design ehtiyat. "
+        "3-star: small mini model slow 24 ghante adha cup pani, compressor fridge jesa humming light sleepers mushkil."
+    ),
+    "dishwasher": (
+        "Real buyers say: bartan bilkul saaf aur chamak jate hain, grease aur oil saaf ho jata hy, "
+        "time ki boht bachat hy, ammi boht khush hain, tablets achi use karein to glass shine karta hy. "
+        "4-star complaints: installation me plumber ki zrurat pari, rinse aid sath nahi tha, "
+        "dry hone me thora time lagta hy. "
+        "3-star: bare bartan karahi adjust krna mushkil hy, tablets mehnge hain, guzara hy."
+    ),
+}
+
+# Fallback generic vocab when no category matches
+GENERIC_VOCAB: str = (
+    "Talk about: product quality achi hai, packing safe thi, "
+    "same as shown in picture, delivery time par mili, value for money."
+)
+
+
+def detect_category(product_name: str) -> str:
+    """Detects the product category from the product title.
+
+    Args:
+        product_name: Full product title string.
+
+    Returns:
+        Category key string matching CATEGORY_KEYWORDS, or 'generic' if no match.
+    """
+    name_lower = product_name.lower()
+    for category, keywords in CATEGORY_KEYWORDS.items():
+        if any(kw in name_lower for kw in keywords):
+            return category
+    return "generic"
+
+
+def get_category_vocab(category: str) -> str:
+    """Returns the focused vocabulary bank for a detected category.
+
+    Args:
+        category: Category key from detect_category().
+
+    Returns:
+        Category-specific vocabulary guidance string.
+    """
+    return CATEGORY_VOCAB.get(category, GENERIC_VOCAB)
+
+
+# ---------------------------------------------------------------------------
+# Component Grounding — which physical parts exist per product type
+# ---------------------------------------------------------------------------
+
+COMPONENT_GROUNDING: dict[str, str] = {
+    "blender": "Electric motor appliance. Has sharp blades, jar with lock, motor. NO compressor, NO cooling.",
+    "roti_maker": "Electric heating appliance. Has non-stick plates, heating element. NO motor, NO compressor.",
+    "air_fryer": "Electric heating appliance. Has basket, heating element, timer. NO motor, NO compressor.",
+    "toaster": "Electric heating appliance. Has bread slots, heating coils, browning dial. NO motor, NO compressor.",
+    "iron": "Electric heating appliance. Has soleplate, temperature dial. NO motor, NO compressor, NO sound.",
+    "kettle": "Electric heating appliance. Has heating element, auto cut-off. NO motor, NO compressor.",
+    "microwave": "Electric appliance. Has magnetron, turntable. NO motor sound, NO compressor.",
+    "refrigerator": "Electric cooling appliance. Has compressor, shelves, freezer section. Compressor can be silent or have low hum.",
+    "washing_machine": "Electric motor appliance. Has wash tub, spin tub, motor. Motor can be loud on high.",
+    "ac": "Electric cooling appliance. Has compressor, outdoor unit, indoor unit. Inverter models are silent.",
+    "straightener": "Electric heating appliance. Has ceramic/titanium plates. NO motor, NO compressor. NEVER say handle gets hot.",
+    "hair_dryer": "Electric motor appliance. Has fan, heating element, speed/heat settings, nozzle. NO plates, NO compressor.",
+    "curler": "Electric heating appliance. Has heated barrel/rod, clip, temperature dial. NO motor, NO fan noise.",
+    "trimmer": "Battery/USB powered grooming device. Has sharp blades. NEVER use cooling or heavy motor language.",
+    "led_tv": "Electronic display device. Has screen, speakers, smart OS. NO motor, NO compressor.",
+    "pizza_pan": "Electric heating appliance. Has non-stick surface, heating element. NO motor.",
+    "sandwich_maker": "Electric heating appliance. Has non-stick plates. NO motor.",
+    "hot_plate": "Electric heating appliance. Has heating surface. NO motor, NO compressor.",
+    "spray_mop": "Pure manual tool. NO plug, NO motor, NO electricity.",
+    "fries_cutter": "Pure manual tool. NO plug, NO motor, NO electricity.",
+    "geyser": "Gas/Electric water heating appliance. Has ignition, water tank.",
+    "water_dispenser": "Electric cooling/heating appliance. Has taps, cooling compressor.",
+    "heater": "Electric heating appliance. Has fan, heating element. Can have fan noise.",
+    "humidifier": "Electric appliance. Has water tank, mist nozzle. Runs quietly.",
+    "scale": "Battery powered device. Has digital display. NO motor.",
+    "insect_killer": "Electric device. Has UV light. Runs silently.",
+    "coffee_maker": "Electric heating appliance. Has jug, filter basket, warming plate, on/off switch. NO motor, NO compressor.",
+    "fan": "Electric motor appliance. Has blades/tower body, speed dial/remote, oscillation. NO compressor, NO cooling liquid.",
+    "cooler": "Evaporative cooling appliance. Has water tank, pump, cooling pad, fan. NOT an AC — does NOT use compressor.",
+    "cooker": "Electric heating appliance. Has ceramic/induction surface, knob/touch controls. NO motor.",
+    "vacuum_cleaner": "Electric motor appliance. Has suction motor, pipe, brush heads, dust bag/canister. Motor can be loud.",
+    "air_purifier": "Electric appliance. Has HEPA filter, fan. Runs quietly. NO cooling, NO heating.",
+    "dehumidifier": "Electric appliance. Has water tank, compressor/desiccant. Runs quietly.",
+    "dishwasher": "Electric kitchen cleaning appliance. Has spray arms, dish racks, detergent dispenser. NO clothes washing, NO spin dryer.",
+}
+
+
+# ---------------------------------------------------------------------------
+# SYSTEM PROMPT — Optimized for DeepSeek Reasoning Models
+# ---------------------------------------------------------------------------
+
+SYSTEM_PROMPT = """<persona>
+You are NOT an AI. You ARE these real people — become them completely. Each person has a DISTINCT typing personality:
+
+- TIKTOK GIRL (22, Lahore): Types fast, uses "😍" or "💯" sometimes, starts mid-thought like "mashallah acha product hay. recommended", mixes English slang randomly, excited tone. Might say "literally" in English mid-sentence.
+- WORKING WOMAN (35, Karachi): Compares to old product or parlour visits, calm measured tone, writes "waise" and "khair" naturally, never uses emojis. Types complete thoughts but short.
+- PINDI UNCLE (45, Rawalpindi): Writes broken English because keyboard is English, makes spelling mistakes even in English, uses "OK" and "good" a lot, might write ALL CAPS for emphasis on one word.
+- SILENT BHAI (young guy, Islamabad): Just rates and writes 4-8 words max. "boht acha hy bhai 👍" and moves on. Zero detail. Zero story.
+- KITCHEN AUNTY (housewife, Faisalabad): Ordered for kitchen, mentions WHO she made food for (bacho, mehman, ghar wale), uses "mashallah" or "alhamdulillah" naturally, keeps it simple.
+- DETAIL GUY (28, office worker, Multan): The one person who actually writes a proper review with 2-3 sentences. Mentions specific things — model number, weight, build quality. Rare persona.
+- SARCASTIC REVIEWER (30, Karachi): Even when giving 5 stars, has dry humor — "ab ye kehna nahi pary ga k kaam nahi krta" or backhanded praise style.
+
+You just unboxed your order from KiaChahiye.com. You're typing a quick review on your phone. You are NOT writing a product description. You are sending a WhatsApp-style message about what you bought.
+<mobile_typing_reality>
+THIS IS HOW REAL PAKISTANIS TYPE ON MOBILE (copy these exact frequency patterns):
+
+Spelling variations with real buyer frequency distributions — distribute your reviews accordingly:
+- "hai" frequency: 40% "hy", 20% "hai", 15% "h" (bare consonant), 15% "hay", 10% "haa"
+- "bohat" frequency: 50% "boht", 25% "bht", 15% "bohot", 10% "bahout"
+- "theek" frequency: 49% "theek", 39% "thek", 12% "thk"
+- "ziada" frequency: 54% "ziada", 41% "zyada", 5% "zda"
+- "thanks" frequency: 45% "thanks", 38% "shukriya", 17% "thnx"
+- "acha": write as "acha", "achi", "achaa", "achy"
+- "bhi": shortcut to "b" (very frequent in reviews), "bhi", or "bi"
+- "ke/ki/ka": shortcut to "k", "ke", or "ki"
+- "mein": write as "me", "mein", "mei", "m"
+- "lekin": write as "lekin", "lekn", "lkn", "pr", "par"
+- "karna/karni": write as "krna", "krni", "karna"
+- Dropped terminal nasalization (standard informal Roman Urdu): "deewaro" not "deewaron", "garmiyo" not "garmiyon", "kapro" not "kapron", "baalo" not "baalon"
+
+Real mobile habits:
+- Run-on sentences with no periods: "product acha hy packing b achi thi delivery time pe hogai"
+- Very few periods — most reviews have 0-1 periods total
+- Some reviews are one long flowing sentence with no punctuation at all
+- Dropped spaces sometimes: "hogya", "hogai", "hojata", "agya"
+- Grammatical "mistakes" that are actually how people talk: "bohat acha product hai ye wala"
+- Mix English product loanwords naturally into Urdu syntax: "heat jaldi ati hy baal smooth hojatay hain", "chilled kar deta ha", "compressor ki awaz bilkul b nahi hy"
+
+Urdu filler words (sprinkle naturally — NOT in every review, only 1-2 per batch where appropriate):
+- "waise" — btw/incidentally: "waise packing boht achi thi"
+- "khair" — anyway: "khair chalta hy kaam chal rha hy"
+- "aray" — exclamation: "aray boht zabardast hy"
+- "matlab" — like/meaning: "matlab expected se better nikla"
+- "haan" — yes/affirmation mid-sentence: "haan bhai original piece mila"
+- "bus" — just/that's it: "bus itna kahunga ke paisa wasool"
+- "woh b" — that too: "cooling achi hy woh b bilkul silent"
+</mobile_typing_reality>
+
+<voice_calibration>
+STUDY THESE REAL KIACHAHIYE.COM / DARAZ.PK REVIEWS — your output must sound EXACTLY this raw and natural:
+
+5-Star Real Reviews (notice the RANGE: some pure English, some pure Urdu, some mixed, some short, some medium):
+- "very good value for money and recommended. Best price"
+- "same as shown in the picture."
+- "I am satisfied to this product. Too good and brand new product. Thanku KiaChahye"
+- "good product came in secure packing. Definitely recommend this product"
+- "Good quality. Reached within one day. Complete in original condition. Working perfectly."
+- "Very nice product same as shown in pictures"
+- "mashallah se bahout Ache machine haa or motor ki speed bhi tez haa thanks kiachahye"
+- "Recommnded Price with free delivery and installation"
+- "Quality aur customer services best thi."
+- "Very spacious and beautiful fridge in very good price"
+- "Overall a good product and looks all fine so far. Thanks kiachahye"
+- "I am very happy with this product. Very beautiful model. Thanks kiachahye"
+- "the fridge is excellent in terms of cooling and quality. received on time"
+- "Fridge bilkul silent hai aur thanda boht tezi se karta hai."
+- "Pehle semi-automatic thi, leken is se kaam boht asaan ho gaya. Motor power zabardast hai aur kapray bilkul saaf dho leti hai."
+- "Achi quality hai, delivery ke sath installation bhi free kar di."
+- "I recived my order bohat hi zabardast hy same wesa hi hy jysy picture main tha thanks kiachahye"
+- "boht zabardast fridge hai cooling bht fit hy bilkul chilled kar deta ha time pe delivery mili ammi boht khush hoi"
+- "mashallah boht pyara fridge hy color b same aya awaz bilkul b nahi hy compressor ki 10/10 recommended"
+- "10/10 machine spin speed boht fast hy 5 mint me kapre almost sookh jate hain highly recommended"
+- "milk shake 1 minute me ban jata hy baraf b achi crush krta blades bht sharp hain ammi ko bht psnd aya"
+- "salon jesa look ghar pe mil jata hy curly baal aik swipe me pin straight ceramic plates smooth hain"
+
+NOTICE THE PATTERNS:
+- English reviews have BROKEN grammar: "satisfied TO this", "Thanku", "Recommnded", "recived", "jysy" — real typos!
+- Some reviews are ALL English with periods between sentences
+- Some are ALL Roman Urdu with zero punctuation
+- Some MIX both naturally: "mashallah se bahout Ache machine haa" uses both
+- "hay" and "haa" appear alongside "hy" and "hai" — NOT just one spelling
+- Platform thanks ("thanks kiachahye") appears naturally in some
+
+4-Star Real Reviews (notice: complaint woven naturally with "bas"/"lekin"/"but"):
+- "mashallah se bahout Ache machine haa bas pip thora chota hay"
+- "Overall a good product and looks fine but noise sound hay but not too much"
+- "Packaging was awesome product bhi bohat acha lag raha hay leken delivery late hoye"
+- "product is really fantastic but the delivery was late. overall experience is pretty good."
+- "Machine silent aur solid hai, bas tap connector pipe thora tight tha lagate waqt."
+- "Iron kapray bilkul crisp press karta hai, heating teez hai. Bas water spray wala button thora hard press hota hai."
+- "Juicer original hai aur kaam secondon mein karta hai, bas sound thori zyada hai high speed par. Overall value for money."
+- "Is rate mein inverter fridge boht achi value hai. Bas thora sa bend hay grill mey"
+- "Product theek chal rahi hai lekin delivery late mili."
+- "Product sahi hay Bas power cord thori short hai, extension lagana para. Baqi kaam fit hai."
+- "cooling achi hy freezer bara hy lekin handles thore nazuk lag rahe hain wire b choti hy"
+
+3-Star Real Reviews (notice: pragmatic resignation / reluctant acceptance — 'guzara hy'):
+- "chalta theek hy par body thori halki lagi pehle wale pel k muqable me plastic b normal hy guzara ha"
+- "guzara hy motor garam ho jati hy agar 2 dafa lagatar chalayein cover b sath nai bheja seller ne"
+- "guzara hy fries crunch nahi hote jese oil me hotay hain thode dry ban jate hain baking k liye behtar h"
+- "heating thori slow hy pehle wale microwave k mukable me time double lagana prta hy average unit"
+
+CRITICAL: Match the EXACT messiness level of these examples. Notice:
+- "hay" and "haa" alongside "hy" — mix these up!
+- "bas" is the #1 transition before complaints (not always "lekin")
+- English reviews have REAL typos ("recived", "Recommnded", "pip") — not polished grammar
+- Some reviews end with periods, some don't — BOTH are real
+- "thanks kiachahye" appears naturally without feeling forced
+</voice_calibration>
+
+<anti_bot_checklist>
+YOUR REVIEW SOUNDS LIKE A BOT IF ANY OF THESE ARE TRUE — rewrite it:
+✗ Every sentence has correct grammar and proper punctuation
+✗ You wrote "hai" the same way in every review (should mix hy/h/hai/hay/haa)
+✗ Review reads like a product description: "heats up in seconds, hair feels soft after using"
+✗ Over-explaining or writing backstories: on Daraz, most buyers just write 1 punchy line under 10 words
+✗ All reviews in the batch have similar word count or structure
+✗ Sentences follow [Feature] + [positive adjective] + period pattern
+✗ You used proper conjunctions like "aur" at the start of every clause instead of just running words together
+✗ Review has a neat, tidy ending like "Overall satisfied." or "Highly recommended." or "works perfectly"
+✗ You capitalized words properly throughout
+✗ English reviews have perfect grammar — real Pakistani English has typos and broken grammar
+✗ Every 4-star review uses "lekin" — real buyers say "bas" or "but" just as often
+
+FIX: Imagine you're lying in bed, phone in one hand, typing with your thumb about what you just received. THAT is the energy.
+</anti_bot_checklist>
+
+<product_rules>
+PHYSICAL REALITY (never cross-contaminate between product types):
+1. Only mention parts that physically exist on THIS product. Blades for blenders, plates for roti makers, compressor for fridges — NEVER mix them up.
+2. Scale Truth: If title says 8+ Cu Ft fridge, it's a full family appliance — NEVER call it "small".
+3. ZERO RAW NUMBERS: Real buyers NEVER quote specs. Say "motor tez hai" NOT "600W motor". Say "room ke liye perfect" NOT "1.5 ton".
+4. FOOD WORDS: Say "khana", "salan", "roti", "chai". NEVER say "curry".
+</product_rules>
+
+<guardrails>
+HARD RULES (violating any = failure):
+
+1. BANNED WORDS:
+   - Indian Hindi: "turant", "dhanyawad", "suvidha", "kripya", "upayog"
+   - Formal Urdu: "mayari", "paidaar", "faraham"
+   - AI buzzwords: "efficient", "optimal", "satisfactory", "seamless", "delighted", "craftsmanship", "game-changer", "sleek design", "pinnacle", "epitome", "boasts", "testament to"
+   - Bookish words: "foran" / "fauran" — use "jaldi" instead
+
+2. REALITY RULES:
+   - Recent delivery only (1-2 weeks). NEVER claim months of use.
+   - NEVER mention "bewi"/"biwi"/"wife" — use "ghar ke liye", "ghar walon ko pasand aya"
+   - NEVER mention broken parts, fake items, sparking, chemical smell
+   - NEVER show self-correction ("wife... nai" or "I mean")
+   - NEVER write "pehle online order karne me dar tha" or similar online trust hesitation clichés — real buyers talk about using the item itself!
+
+3. ANTI-REPETITION:
+   - Every review: different structure, different opening, different angle
+   - NEVER start multiple reviews with the same word
+   - These phrases MAX ONCE per batch: "paisa wasool", "same as shown in picture", "recommended", "boht achi cheez hai", "maza agya"
+   - "ammi ke liye" MAX once — rotate: "behen k liye", "apne liye", "office ke liye", "hostel k liye", "bacho k liye"
+   - OPENING DIVERSITY: "ghar k liye" / "ghar k liye mangwaya" / "ghar k liye lia" MAX ONCE per batch! Other reviews must start differently — with the product action, a reaction, or mid-thought.
+   - NEVER start 2+ reviews with "boht" or "very" or "good" in the same batch
+
+4. ENDINGS — 70% NO ENDING RULE:
+   - 70% of reviews MUST just STOP after the product comment. No sign-off, no closing word, nothing. Just end mid-thought like a real person.
+     Example: "heat jaldi ati hy baal smooth hojatay hain" ← just stops here, no "recommended" or "overall good"
+   - Only 30% may have a casual closer. Pick from: "recommended", "10/10", "worth it"
+   - NEVER end with: "Overall satisfied.", "Highly recommended.", "Good product.", "works perfectly" — these are bot signatures
+
+5. SPEAKER GENDER MATCH (Aurat ya Mard):
+   - Match the reviewer's perspective and verbs to their assigned name:
+     • FEMALE names (e.g. Ayesha, Fatima, Zainab, Sana, Hira, Sadia): She is an aurat (woman). Self-verbs: "khush hui", "use karti hoon", "apne liye mangwaya tha". For female styling (straightener, curler), she is the direct user.
+     • MALE names (e.g. Bilal, Usman, Tariq, Ahmed, Farhan, Kamran): He is a mard (man). Self-verbs: "khush hua", "use karta hoon".
+     • Cross-gender items: If a male name reviews female styling products (hair straightener, curler), he bought it for family: "sister k liye lia tha", "ghar walon k liye mangwaya", "ammi boht khush hain". If a female name reviews a men's trimmer: "bhai k liye lia tha" or "gift dia tha".
+
+6. FORMATTING:
+   - Correct Urdu gender for objects: "pizza perfect banta hai" (masc), "roti soft banti hai" (fem)
+   - No trailing dots "....". Minimal punctuation — most reviews have 0-1 periods
+   - 👍 emoji in at most 1 review per batch (not every batch)
+</guardrails>
+
+<review_tiers>
+TIER 1 — SEEDHI BAAT (4-12 words): MOST COMMON ON DARAZ (50–60% of buyers). Quick, direct, one-thumb reaction. Real buyers just tap stars and write what matters:
+  - "same as shown in the picture."
+  - "very good value for money and recommended. Best price"
+  - "good product came in secure packing. Definitely recommend this product"
+  - "Good quality. Complete in original condition. Working perfectly."
+  - "Very nice product same as shown in pictures"
+  - "mashallah se bahout Ache machine haa or motor ki speed bhi tez haa"
+  - "Fridge bilkul silent hai aur thanda boht tezi se karta hai."
+  - "Quality aur customer services best thi."
+  - "MashaAllah original piece mila 👍"
+
+TIER 2 — PRACTICAL SHORT (12-25 words): SECONDARY TIER (35–45% of reviews). 1-2 run-on sentences with a specific observation or minor 4-star friction:
+  - "Machine silent aur solid hai, bas tap connector pipe thora tight tha lagate waqt."
+  - "Packaging was awesome product bhi bohat acha lag raha hay leken delivery late hoye"
+  - "Iron kapray bilkul crisp press karta hai, heating teez hai. Bas water spray wala button thora hard press hota hai."
+  - "Juicer original hai aur kaam secondon mein karta hai, bas sound thori zyada hai high speed par."
+  - "chalaya aur pehli dafa me hi samajh agya koi rocket science nai motor tez hy blades sharp"
+  - "Pehle semi-automatic thi, leken is se kaam boht asaan ho gaya. Motor power zabardast hai"
+  - "Product sahi hay Bas power cord thori short hai, extension lagana para. Baqi kaam fit hai."
+
+TIER 3 — DETAILED (28-40 words, RAREST — only when specifically allowed): 2-3 natural sentences about a real situation (replacing old appliance, weekend use). NEVER an essay:
+  - "humara purana blender 5 saal baad kharab hua tha to ye wala lia motor ki speed us se kahin ziada tez hy baraf aur badam aik minute me powder bana deta hy jug heavy plastic ka hy"
+  - "choti behen ki shadi k liye lia tha box open kr k pura unit test kia finish boht luxury lagti hy buttons responsive hain warranty card b andar stamped mila full satisfaction"
+  - "sunday ko pehli dafa use kia pehle thora dhyan se instructions parhein phir fries banaye bina oil k bilkul crispy nikle bacho ko bht maza aya safai b tissue se asan ho gai"
+</review_tiers>
+
+<rating_sentiment>
+5 Stars: Genuine reactions from different TYPES of people. NOT generic praise. Each review must feel like it was typed by a completely different human with a different personality, reason for buying, and thing they noticed first. Variety is EVERYTHING.
+
+4 Stars: Happy with product BUT one small real complaint naturally woven into the review (not tacked on at the end). Pick a DIFFERENT friction angle for each 4-star review:
+  A. TRANSIT: "box ka corner thora daba tha transit mein lekin product safe nikla"
+  B. COURIER TIMING: "delivery thori late hogai thi" or "rider late aya lekin parcel safe tha"
+  C. CORD/CABLE: "wire thora chota hy extension lagani pari"
+  D. SOUND ON HIGH: "tez speed pe thori awaz ati hy"
+  E. SIZE: "size socha tha us se thora bara nikla"
+  F. WEIGHT: "thori bhari hy sochne se"
+  G. COLOR: "colour thora different hy screen se lekin in person theek hy"
+  H. ACCESSORIES: "extra attachment aata to aur acha hota"
+  I. FIRST USE: "pehli baar chalaya to halki smell aayi ek din me chali gai"
+  J. PACKING: "tape boht tight tha box kholne me mushkil hui"
+
+3 Stars: Pragmatic resignation / reluctant acceptance ("guzara hy", "normal chez hy bus", "itna khas nai"). The device works or meets minimum bare function, but feels light/cheap, motor runs warm, heating is slow, or takes longer than expected. It's not completely broken, just mediocre value or slight disappointment ("chalta theek hy par body halki lagi guzara ha").
+
+DELIVERY: ZERO or ONE review per batch mentions delivery. NEVER more than one. 80% of batches should have ZERO delivery mentions — real buyers talk about the PRODUCT, not delivery.
+CUSTOMER SERVICE: Only mention if SPECIFICALLY instructed. Vary phrasing every time.
+FREE INSTALLATION: Only if specifically instructed. Only in 5-star reviews. Keep it brief.
+PLATFORM THANKS: At most 1 review in 10-15 products may write "thanks kiachahye". Don't force it.
+</rating_sentiment>
+
+<output_format>
+Return STRICTLY a valid JSON array (starting with "[" and ending with "]").
+Do NOT wrap in markdown codeblocks (no ```json or ```).
+Do NOT include any introduction, explanations, or commentary outside the JSON array.
+[
+  {"name": "<Pakistani Name>", "rating": <int>, "review": "<review text>"}
+]
+</output_format>"""
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
 
 
 def is_installation_candidate(product_name: str) -> bool:
@@ -427,7 +687,7 @@ def build_review_prompt(
     include_installation: bool = False,
     include_customer_service: bool = False,
 ) -> str:
-    """Builds the structured XML user prompt for review generation.
+    """Builds the structured user prompt for review generation.
 
     Args:
         product_name: The full product title as listed on the store.
@@ -440,109 +700,176 @@ def build_review_prompt(
             (~25% of products across catalog).
 
     Returns:
-        Structured XML user prompt ready to send as the 'user' message to the LLM.
+        Structured user prompt ready to send as the 'user' message to the LLM.
     """
+    from persona_data import generate_reviewer
+
     clean_sku = sku.strip() if sku else "N/A"
     count = len(ratings)
+    # Tier 1 (Seedhi Baat) is strictly dominant (60%+ on Daraz): e.g. 5 reviews -> 3 Tier 1, 2 Tier 2
+    # Tier 2 (Practical Short) is secondary: 1-2 reviews
+    # Tier 3 (Detailed) is rarest: at most 1 review when allow_detailed is True
     if count <= 2:
         seedhi_baat_count = 1
+        tier2_count = count - seedhi_baat_count
         eng_count = "1"
     elif count == 3:
-        seedhi_baat_count = 1 if allow_detailed else 2
-        eng_count = "1–2"
+        if allow_detailed:
+            seedhi_baat_count = 1
+            tier2_count = 1
+        else:
+            seedhi_baat_count = 2
+            tier2_count = 1
+        eng_count = "1"
     elif count == 4:
-        seedhi_baat_count = 2 if allow_detailed else 3
-        eng_count = "2"
+        if allow_detailed:
+            seedhi_baat_count = 2
+            tier2_count = 1
+        else:
+            seedhi_baat_count = 2
+            tier2_count = 2
+        eng_count = "1"
     else:  # count >= 5
-        seedhi_baat_count = 3 if allow_detailed else 4
-        eng_count = "2–3"
-
-    tier2_count = count - seedhi_baat_count - (1 if allow_detailed else 0)
+        if allow_detailed:
+            seedhi_baat_count = 3
+            tier2_count = 1
+        else:
+            seedhi_baat_count = 3
+            tier2_count = 2
+        eng_count = "1"
 
     if allow_detailed:
         length_directive = (
-            f"Tier 1 — SEEDHI BAAT: Exactly {seedhi_baat_count} review(s) must be ultra-short (5–10 words only). "
-            f"e.g. 'Motor boht tez hai, working 10/10 hai.' or 'Build quality solid hai, kaam bilkul fit hai.'\n"
-            f"Tier 2 — PRACTICAL SHORT: {tier2_count} review(s) must be crisp practical feedback (12–25 words).\n"
-            f"Tier 3 — DETAILED EXPERIENCE: Exactly 1 review may be a longer unboxing experience "
-            f"(30–45 words max). NEVER an essay. ZERO multi-month duration claims."
+            f"MANDATORY TIER LENGTH CONSTRAINTS ({count} reviews total):\n"
+            f"- Tier 1 — SEEDHI BAAT: Exactly {seedhi_baat_count} review(s) MUST be ultra-short (4–10 words max). "
+            f"Direct one-thumb reactions — e.g. 'same as shown in picture', 'cooling boht fit hy', 'mashallah achi machine hy', 'Good quality recommended'. NEVER write more than 10 words for these {seedhi_baat_count} reviews!\n"
+            f"- Tier 2 — PRACTICAL SHORT: Exactly {tier2_count} review(s) (12–20 words). 1-2 run-on sentences with a practical observation or minor 4-star friction.\n"
+            f"- Tier 3 — DETAILED EXPERIENCE: Exactly 1 review (25–35 words max). Short household context. NEVER an essay. ZERO 'dar tha' clichés."
         )
     else:
         length_directive = (
-            f"Tier 1 — SEEDHI BAAT: Exactly {seedhi_baat_count} review(s) must be ultra-short (5–10 words only). "
-            f"e.g. 'Cooling achi hai, bilkul silent.' or 'Original sealed pack mila, working 10/10 hai.'\n"
-            f"Tier 2 — PRACTICAL SHORT: The remaining {tier2_count} review(s) must be crisp practical feedback (12–25 words).\n"
-            f"NO TIER 3: All reviews in this batch must stay short and punchy (Tier 1 and Tier 2 only)."
+            f"MANDATORY TIER LENGTH CONSTRAINTS ({count} reviews total):\n"
+            f"- Tier 1 — SEEDHI BAAT: Exactly {seedhi_baat_count} review(s) MUST be ultra-short (4–10 words max). "
+            f"Direct one-thumb reactions — e.g. 'same as shown in picture', 'cooling boht fit hy', 'mashallah achi machine hy', 'Good quality recommended'. NEVER write more than 10 words for these {seedhi_baat_count} reviews!\n"
+            f"- Tier 2 — PRACTICAL SHORT: Exactly {tier2_count} review(s) (12–20 words). 1-2 run-on sentences with a practical observation or minor 4-star friction.\n"
+            f"- NO TIER 3: All reviews in this batch must stay in Tier 1 and Tier 2 only."
         )
 
+    # --- Pre-generate dynamic unique Pakistani reviewer names for this batch ---
+    assigned_names: list[str] = []
+    while len(assigned_names) < count:
+        cand = generate_reviewer().name
+        if cand not in assigned_names:
+            assigned_names.append(cand)
+    assigned_names_str = ", ".join(f'"{n}"' for n in assigned_names)
+
+    # --- Detect product category and get focused vocabulary ---
+    category = detect_category(product_name)
+    vocab_guidance = get_category_vocab(category)
+    component_info = COMPONENT_GROUNDING.get(category, "")
+
+    # --- Build focused product context block ---
+    product_context = f"""<product_context>
+Product: {product_name}
+Category: {category}
+Physical reality: {component_info}
+Vocabulary guidance: {vocab_guidance}
+IMPORTANT: Only mention parts and experiences that physically exist on THIS product. Never cross-contaminate from other product types.
+</product_context>"""
+
     # --- Brand-specific logistics directive (programmatically enforced) ---
-    is_westpoint_or_anex = any(b in product_name.lower() for b in ["westpoint", "west point", "anex"])
-    if is_westpoint_or_anex:
+    name_lower = product_name.lower()
+    is_major_brand = any(b in name_lower for b in MAJOR_APPLIANCE_BRANDS)
+
+    if is_major_brand:
         logistics_directive = (
-            "<brand_logistics_directive>\n"
-            "WESTPOINT / ANEX PRODUCT — KiaChahiye.com does NOT offer same-day delivery for this brand.\n"
-            "STRICTLY FORBIDDEN: 'same day', 'same day delivery', 'subah order shaam ko mila'.\n"
-            "Use ONLY standard courier language: '2-3 din mein deliver hua', 'parcel safe mila', 'time par delivery mil gayi'.\n"
-            "</brand_logistics_directive>"
+            "<brand_logistics>\n"
+            "MAJOR BRAND — Karachi/Lahore may get same-day delivery.\n"
+            "Other cities: 2–3 day standard delivery.\n"
+            "Same-day mention: at most ONE review in this batch, keep it short: 'Same day delivery mil gayi, highly recommended.'\n"
+            "</brand_logistics>"
         )
     else:
         logistics_directive = (
-            "<brand_logistics_directive>\n"
-            "MAJOR BRAND APPLIANCE — In Karachi and Lahore, same-day delivery is the signature experience.\n"
-            "For other cities (Multan, Peshawar, Rawalpindi, etc.), use 2–3 day delivery language.\n"
-            "</brand_logistics_directive>"
+            "<brand_logistics>\n"
+            "STANDARD COURIER — No same-day delivery for this brand.\n"
+            "BANNED: 'same day', 'same day delivery', 'subah order shaam ko mila'.\n"
+            "Use only: '2-3 din mein deliver hua', 'parcel safe mila', 'time par delivery mil gayi'.\n"
+            "</brand_logistics>"
         )
 
-    # --- Optional free installation directive (injected only when probabilistically selected) ---
+    # --- Optional free installation directive ---
     if include_installation:
         installation_directive = (
-            "<free_installation_directive>\n"
-            "KiaChahiye.com provides FREE installation for this appliance.\n"
-            "ONE review in this batch should naturally and casually mention this "
-            "(e.g. 'Delivery ke sath installation bhi free kar di!' or 'free installation bhi ho gayi').\n"
-            "</free_installation_directive>\n"
-        )
-        installation_reminder = (
-            "- Because <free_installation_directive> is present: include one natural mention of free installation in exactly one review.\n"
+            "<free_installation>\n"
+            "Include ONE brief free installation mention in a 5-STAR review only.\n"
+            "e.g. 'Delivery ke sath installation bhi free kar di, boht achi service hai' or 'Free installation mil gayi, thanks kiachahye!'\n"
+            "</free_installation>\n"
         )
     else:
         installation_directive = ""
-        installation_reminder = ""
 
-    # --- Optional customer service directive (~20-25% chance across catalog) ---
+    # --- Optional customer service directive (dynamically varied) ---
     if include_customer_service:
+        cs_angles = [
+            "support team ne guide kiya helpful thay",
+            "helpline walon ne jaldi jawab diya",
+            "after sale service achi mili",
+            "query ka response acha aur quick tha",
+            "customer care walon se baat hui madad kar di unhon ne",
+            "seller chat pe response quick mil gaya tha",
+        ]
+        picked_cs = random.choice(cs_angles)
         cs_directive = (
-            "<customer_service_directive>\n"
-            "ONE review in this batch should casually mention helpful customer care or WhatsApp support "
-            "(e.g. guidance on a query, or a minor setup issue resolved quickly).\n"
-            "</customer_service_directive>\n"
-        )
-        cs_reminder = (
-            "- Because <customer_service_directive> is present: include one natural mention of customer service/support in one review.\n"
+            "<customer_service>\n"
+            f"Include ONE brief customer service nod in a 5-STAR review only (phrasing angle: '{picked_cs}').\n"
+            "NEVER write long stories about contacting support.\n"
+            "</customer_service>\n"
         )
     else:
         cs_directive = ""
-        cs_reminder = ""
 
     return f"""<task>
 <product_title>{product_name}</product_title>
 <sku>{clean_sku}</sku>
 <target_ratings>{ratings}</target_ratings>
 
+{product_context}
+
 {logistics_directive}
 
 {installation_directive}{cs_directive}<batch_requirements>
 Generate exactly {count} reviews. Match each review to its corresponding rating in <target_ratings>.
-Distribute tiers across this batch as follows:
+Assign these exact reviewer names to the {count} reviews: {assigned_names_str}
+
+Length distribution:
 {length_directive}
+
+Language: Write {eng_count} review(s) in Pakistani English. STUDY these REAL examples of how Pakistanis write English reviews on Daraz:
+- "I am satisfied to this product. Too good and brand new product. Thanku KiaChahye"
+- "good product came in secure packing. Definitely recommend this product"
+- "Good quality. Reached within one day. Complete in original condition. Working perfectly."
+- "Very nice product same as shown in pictures"
+- "the fridge is excellent in terms of cooling and quality. received on time"
+- "Overall a good product and looks fine but noise sound hay but not too much"
+- "product is really fantastic but the delivery was late. overall experience is pretty good."
+NOTICE: Pakistani English uses short sentences WITH periods, has typos ("recived", "Recommnded", "Thanku"), broken prepositions ("satisfied TO"), drops articles, and sometimes mixes in Urdu words ("hay", "hai"). NEVER write clean Amazon-style English.
+Remaining reviews in natural Roman Urdu.
 </batch_requirements>
 
+<think_first>
+Before writing each review, imagine:
+1. WHO is typing this? Look at their assigned name: is this person an aurat (woman) or mard (man)? Match their voice and verbs accordingly (female: "khush hui", male: "khush hua"). If male name on female styling product: bought for sister/mother/family!
+2. Are they typing on phone quickly or carefully? Do they use "hy" or "hai"? Short or long?
+3. What physical parts does this product actually have? (don't mention parts that don't exist)
+4. What would they ACTUALLY notice first — packaging? product look? first use?
+5. For 4-star: pick a DIFFERENT minor complaint than the other 4-star reviews
+6. Read your review back — does it sound like a WhatsApp voice-to-text or a product manual? If manual, rewrite it messier.
+</think_first>
+
 <instructions>
-1. Language: Write {eng_count} review(s) in simple English (5–12 words max), remaining in Roman Urdu. Use everyday words common to Pakistani buyers.
-2. Match star rating to sentiment exactly as described in <rating_guidelines>.
-3. Adhere to ALL rules in <negative_constraints>: no hostel, no manuals, no time contradictions, no spec paraphrasing.
-4. Vary review openings and focus angles — do NOT repeat the same feature across reviews in this batch.
-5. Independent Synthesis: Think independently and generate completely original reviews for <product_title>. NEVER copy or adapt lines from examples.
-{installation_reminder}{cs_reminder}6. Return ONLY a raw JSON array: [{{"name": "string", "rating": number, "review": "string"}}]
+Write {count} reviews that sound like real mobile-typed Daraz.pk buyer feedback.
+Each review must have a completely different structure, opening, and angle.
+Return ONLY a raw JSON array: [{{"name": "string", "rating": number, "review": "string"}}]
 </instructions>
 </task>"""

@@ -29,7 +29,13 @@ from persona_data import (
     get_ratings_distribution,
     get_review_count,
 )
-from prompt_templates import SYSTEM_PROMPT, build_review_prompt, is_installation_candidate
+from prompt_templates import (
+    SYSTEM_PROMPT,
+    build_review_prompt,
+    detect_category,
+    get_category_vocab,
+    is_installation_candidate,
+)
 from wc_client import ReviewPostResult, WooCommerceReviewClient
 
 # --- Fixtures ---
@@ -129,17 +135,78 @@ def test_get_ratings_distribution() -> None:
 # --- Prompt Engineering Tests ---
 
 def test_system_prompt_structure() -> None:
-    """Tests system prompt conforms to prompt-engineer XML standard and negative constraints."""
-    assert "<system_instructions>" in SYSTEM_PROMPT
-    assert "<role>" in SYSTEM_PROMPT
-    assert "<persona_and_style>" in SYSTEM_PROMPT
-    assert "<length_and_tier_structure>" in SYSTEM_PROMPT
-    assert "<negative_constraints>" in SYSTEM_PROMPT
+    """Tests system prompt conforms to DeepSeek-optimized structure with persona-first design."""
+    # Core persona-first sections
+    assert "<persona>" in SYSTEM_PROMPT
+    assert "<voice_calibration>" in SYSTEM_PROMPT
+    assert "<product_rules>" in SYSTEM_PROMPT
+    assert "<guardrails>" in SYSTEM_PROMPT
+    assert "<review_tiers>" in SYSTEM_PROMPT
+    assert "<rating_sentiment>" in SYSTEM_PROMPT
     assert "<output_format>" in SYSTEM_PROMPT
+    # New sections added for authenticity
+    assert "<mobile_typing_reality>" in SYSTEM_PROMPT
+    assert "<anti_bot_checklist>" in SYSTEM_PROMPT
+    # Key guardrails content preserved
     assert "craftsmanship" in SYSTEM_PROMPT
-    assert "ZERO TIME-CONTRADICTION" in SYSTEM_PROMPT
-    assert "hostel" in SYSTEM_PROMPT
     assert "installation" in SYSTEM_PROMPT.lower()
+    assert "bewi" in SYSTEM_PROMPT.lower()
+    # DeepSeek-specific: WhatsApp-style, character archetypes
+    assert "whatsapp" in SYSTEM_PROMPT.lower()
+    assert "tiktok" in SYSTEM_PROMPT.lower()
+
+
+def test_detect_category() -> None:
+    """Tests product category detection from title keywords."""
+    assert detect_category("Haier HR-66B 2.5 Cu Ft Refrigerator") == "refrigerator"
+    assert detect_category("WestPoint WF-9216 Hand Blender Set") == "blender"
+    assert detect_category("Anex AG-1062 Dry Iron") == "iron"
+    assert detect_category("Dawlance 1.5 Ton Inverter AC") == "ac"
+    assert detect_category("Some Unknown Product XYZ") == "generic"
+    assert detect_category("Philips Hair Straightener") == "straightener"
+    assert detect_category("National Electric Kettle") == "kettle"
+    assert detect_category("Haier 8 KG Automatic Washing Machine") == "washing_machine"
+    # New categories
+    assert detect_category("WestPoint WF-2023 1.8 Liters Coffee Maker") == "coffee_maker"
+    assert detect_category("ELite Metal Table Fan Copper ETF-30M") == "fan"
+    assert detect_category("ELite ETF-003 Evaporative Cooler Tower Fan") == "cooler"
+    assert detect_category("WestPoint WF-142 2000 Watts Ceramic Cooker") == "cooker"
+    assert detect_category("WestPoint WF-3669 Deluxe High Suction Vacuum Cleaner") == "vacuum_cleaner"
+    assert detect_category("Haier HWS 60-50 Spin Dryer") == "washing_machine"
+    assert detect_category("TCL 32S51K 32 QLED Smart TV") == "led_tv"
+    assert detect_category("ELite EAP-911 Digital 3-in-1 Air Purifier") == "air_purifier"
+    # Disambiguation and collision fixes
+    assert detect_category("WestPoint WF-2405 Deluxe 750W Stainless Steel Spinner Juicer") == "blender"
+    assert detect_category("Dawlance DDW 14952 S INV 14 Place Settings Silver Inverter Dishwasher") == "dishwasher"
+
+
+def test_get_category_vocab() -> None:
+    """Tests focused vocabulary bank retrieval per category."""
+    fridge_vocab = get_category_vocab("refrigerator")
+    assert "compressor" in fridge_vocab
+    assert "cooling" in fridge_vocab
+
+    blender_vocab = get_category_vocab("blender")
+    assert "blades" in blender_vocab
+    assert "sharp" in blender_vocab
+
+    generic_vocab = get_category_vocab("unknown_category")
+    assert "product quality" in generic_vocab
+
+    # New categories have proper vocab
+    coffee_vocab = get_category_vocab("coffee_maker")
+    assert "coffee" in coffee_vocab
+    assert "filter" in coffee_vocab
+
+    fan_vocab = get_category_vocab("fan")
+    assert "hawa" in fan_vocab
+
+    dishwasher_vocab = get_category_vocab("dishwasher")
+    assert "bartan" in dishwasher_vocab
+    assert "Real buyers say:" in dishwasher_vocab
+
+    vacuum_vocab = get_category_vocab("vacuum_cleaner")
+    assert "suction" in vacuum_vocab
 
 
 def test_build_review_prompt() -> None:
@@ -152,7 +219,10 @@ def test_build_review_prompt() -> None:
     assert "<target_ratings>[5, 5, 4, 5, 4]</target_ratings>" in prompt_short
     assert "SEEDHI BAAT" in prompt_short
     assert "NO TIER 3" in prompt_short
-    assert "<free_installation_directive>" not in prompt_short
+    assert "<free_installation>" not in prompt_short
+    # Category-specific context should be injected
+    assert "<product_context>" in prompt_short
+    assert "refrigerator" in prompt_short.lower()
 
     # Test detailed-allowed mode (20-25% catalog distribution)
     prompt_detailed = build_review_prompt("Haier Refrigerator", "HR-66B", [5, 4, 5], allow_detailed=True)
@@ -162,21 +232,24 @@ def test_build_review_prompt() -> None:
     prompt_with_inst = build_review_prompt(
         "HAIER 8.5KG AUTOMATIC WASHING MACHINE", "HWM85", [5, 5, 4], include_installation=True
     )
-    assert "<free_installation_directive>" in prompt_with_inst
-    assert "FREE installation" in prompt_with_inst
+    assert "<free_installation>" in prompt_with_inst
+    assert "free installation" in prompt_with_inst.lower()
 
     # Test WestPoint brand logistics constraint
     prompt_westpoint = build_review_prompt(
         "WestPoint WF-9216 Hand Blender Set", "WF-9216", [5, 4, 3], allow_detailed=False
     )
-    assert "STRICTLY FORBIDDEN" in prompt_westpoint
+    assert "BANNED" in prompt_westpoint
 
     # Test customer service directive inclusion
     prompt_with_cs = build_review_prompt(
         "Haier Refrigerator", "HR-66B", [5, 5, 4], include_customer_service=True
     )
-    assert "<customer_service_directive>" in prompt_with_cs
-    assert "customer care or WhatsApp support" in prompt_with_cs
+    assert "<customer_service>" in prompt_with_cs
+    assert "customer service" in prompt_with_cs.lower()
+
+    # Test think_first chain-of-thought anchor (DeepSeek-specific)
+    assert "<think_first>" in prompt_short
 
 
 def test_is_installation_candidate() -> None:
@@ -222,6 +295,33 @@ def test_llm_json_extraction(mock_config: AppConfig) -> None:
     # 4. Invalid text
     bad_text = "This is not json at all."
     assert client._extract_json(bad_text) is None
+
+
+def test_sanitize_review(mock_config: AppConfig) -> None:
+    """Tests post-processing sanitizer catches bot artifacts."""
+    client = LLMClient(mock_config)
+
+    # Self-correction pattern
+    assert "wife" not in client._sanitize_review("Zabardast cheez hai, wife... nai ghar ke liye lia tha")
+    assert "ghar walon" in client._sanitize_review("wife ke liye mangwaya")
+
+    # AI buzzwords removed
+    cleaned = client._sanitize_review("This product is seamless and delighted me with its craftsmanship")
+    assert "seamless" not in cleaned
+    assert "delighted" not in cleaned
+    assert "craftsmanship" not in cleaned
+
+    # Hindi words removed
+    cleaned_hindi = client._sanitize_review("Boht turant aur suvidha wala hai")
+    assert "turant" not in cleaned_hindi
+    assert "suvidha" not in cleaned_hindi
+
+    # Clean text passes through unchanged
+    clean = "Boht achi cheez hai, masala barik pees deta hai"
+    assert client._sanitize_review(clean) == clean
+
+    # Double spaces cleaned
+    assert "  " not in client._sanitize_review("Achi  cheez   hai")
 
 
 # --- WooCommerce Client Tests ---

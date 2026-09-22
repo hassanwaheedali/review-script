@@ -99,6 +99,52 @@ class LLMClient:
 
         return None
 
+    @staticmethod
+    def _sanitize_review(text: str) -> str:
+        """Post-processes review text to remove bot artifacts.
+
+        Catches self-correction patterns (e.g. 'wife... nai'), banned word leaks,
+        and AI buzzword slips that the model's guardrails failed to prevent.
+
+        Args:
+            text: Raw review text from the LLM.
+
+        Returns:
+            Cleaned review text with artifacts removed.
+        """
+        # Remove self-correction artifacts: "wife... nai", "biwi... I mean"
+        text = re.sub(
+            r"\b(wife|biwi|bewi)\s*[\.]{2,}\s*(nai|nahi|I mean|matlab)\s*",
+            "",
+            text,
+            flags=re.IGNORECASE,
+        )
+        # Remove any remaining banned relationship words
+        text = re.sub(
+            r"\b(wife|biwi|bewi)\b",
+            "ghar walon",
+            text,
+            flags=re.IGNORECASE,
+        )
+        # Remove AI buzzwords that slipped through
+        ai_buzzwords = [
+            "seamless", "delighted", "craftsmanship", "game-changer",
+            "pinnacle", "epitome", "boasts", "testament to",
+            "efficient", "optimal", "satisfactory",
+        ]
+        for bw in ai_buzzwords:
+            text = re.sub(rf"\b{re.escape(bw)}\b", "", text, flags=re.IGNORECASE)
+        # Remove banned Hindi words
+        hindi_banned = ["turant", "dhanyawad", "suvidha", "kripya", "upayog"]
+        for hw in hindi_banned:
+            text = re.sub(rf"\b{re.escape(hw)}\b", "", text, flags=re.IGNORECASE)
+        # Clean up double spaces, leading/trailing whitespace
+        text = re.sub(r"\s{2,}", " ", text).strip()
+        # Remove dangling punctuation from removals (e.g. ", ," or ".. ")
+        text = re.sub(r"\s*,\s*,", ",", text)
+        text = re.sub(r"\s+([,.])", r"\1", text)
+        return text.strip()
+
     def generate_reviews(
         self,
         product_name: str,
@@ -135,8 +181,8 @@ class LLMClient:
             include_installation = is_installation_candidate(product_name) and (random.random() < 0.35)
 
         if include_customer_service is None:
-            # Realistic probability: ~25% chance across catalog to feature customer support
-            include_customer_service = random.random() < 0.25
+            # Realistic probability: ~18% chance across catalog to feature a brief customer service nod
+            include_customer_service = random.random() < 0.18
 
         user_prompt = build_review_prompt(
             product_name,
@@ -153,7 +199,7 @@ class LLMClient:
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
             ],
-            "temperature": 0.75,
+            "temperature": 0.85,
             "max_tokens": 4000,  # 4000: reasoning models (deepseek-v4-flash) require budget for reasoning_content + output JSON
         }
 
@@ -182,11 +228,35 @@ class LLMClient:
                 raw_reviews = self._extract_json(content)
                 if raw_reviews and len(raw_reviews) > 0:
                     results: list[GeneratedReview] = []
+                    seen_first_names: set[str] = set()
+                    seen_last_names: set[str] = set()
                     for idx, r in enumerate(raw_reviews[:len(ratings)]):
-                        r_name = str(r.get("name", "")).strip() or generate_reviewer().name
+                        r_name = str(r.get("name", "")).strip()
+                        parts = r_name.split()
+                        first_name = parts[0].lower() if parts else ""
+                        last_name = parts[-1].lower() if len(parts) > 1 else ""
+
+                        if not r_name or first_name in seen_first_names or (last_name and last_name in seen_last_names):
+                            for _ in range(30):
+                                candidate = generate_reviewer().name
+                                c_parts = candidate.split()
+                                c_first = c_parts[0].lower() if c_parts else ""
+                                c_last = c_parts[-1].lower() if len(c_parts) > 1 else ""
+                                if c_first not in seen_first_names and c_last not in seen_last_names:
+                                    r_name = candidate
+                                    parts = c_parts
+                                    break
+                            else:
+                                r_name = generate_reviewer().name
+                                parts = r_name.split()
+
+                        if parts:
+                            seen_first_names.add(parts[0].lower())
+                            if len(parts) > 1:
+                                seen_last_names.add(parts[-1].lower())
                         # Always enforce the pre-planned target rating — never trust LLM's self-generated value
                         r_rating = ratings[idx] if idx < len(ratings) else int(r.get("rating", 5))
-                        r_text = str(r.get("review", "")).strip()
+                        r_text = self._sanitize_review(str(r.get("review", "")).strip())
                         results.append(GeneratedReview(name=r_name, rating=r_rating, review=r_text))
 
                     if len(results) == len(ratings):
