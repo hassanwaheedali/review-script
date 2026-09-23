@@ -18,6 +18,7 @@ import requests
 from config import CONFIG, AppConfig
 from persona_data import generate_reviewer
 from prompt_templates import SYSTEM_PROMPT, build_review_prompt, is_installation_candidate
+from review_memory import ReviewMemory
 
 
 @dataclass(frozen=True)
@@ -153,6 +154,10 @@ class LLMClient:
         allow_detailed: bool | None = None,
         include_installation: bool | None = None,
         include_customer_service: bool | None = None,
+        recent_reviews: list[str] | None = None,
+        rejected_reviews: list[str] | None = None,
+        memory: ReviewMemory | None = None,
+        category: str | None = None,
     ) -> list[GeneratedReview]:
         """Generates tailored customer reviews for a given product matching target ratings.
 
@@ -165,6 +170,10 @@ class LLMClient:
                 If None, ~35% chance for eligible appliance categories, and 0% for non-appliances.
             include_customer_service: Whether to mention customer service in one review.
                 If None, ~25% chance across catalog.
+            recent_reviews: Optional recent reviews to inject into anti-repetition memory.
+            rejected_reviews: Optional discarded reviews to blacklist from regeneration.
+            memory: Optional ReviewMemory instance for algorithmic similarity validation.
+            category: Optional detected product category key.
 
         Returns:
             List of GeneratedReview instances.
@@ -184,27 +193,30 @@ class LLMClient:
             # Realistic probability: ~18% chance across catalog to feature a brief customer service nod
             include_customer_service = random.random() < 0.18
 
-        user_prompt = build_review_prompt(
-            product_name,
-            sku,
-            ratings,
-            allow_detailed=allow_detailed,
-            include_installation=include_installation,
-            include_customer_service=include_customer_service,
-        )
-
-        payload: dict[str, Any] = {
-            "model": self.config.agentrouter_model,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            "temperature": 0.85,
-            "max_tokens": 4000,  # 4000: reasoning models (deepseek-v4-flash) require budget for reasoning_content + output JSON
-        }
+        working_rejected: list[str] = list(rejected_reviews) if rejected_reviews else []
 
         last_error: str | None = None
         for attempt in range(1, self.config.max_retries + 1):
+            user_prompt = build_review_prompt(
+                product_name,
+                sku,
+                ratings,
+                allow_detailed=allow_detailed,
+                include_installation=include_installation,
+                include_customer_service=include_customer_service,
+                recent_reviews=recent_reviews,
+                rejected_reviews=working_rejected,
+            )
+
+            payload: dict[str, Any] = {
+                "model": self.config.agentrouter_model,
+                "messages": [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "temperature": min(0.85 + (0.05 * (attempt - 1)), 1.0),
+                "max_tokens": 4000,  # 4000: reasoning models (deepseek-v4-flash) require budget for reasoning_content + output JSON
+            }
             try:
                 response = self.session.post(
                     self.endpoint,
@@ -260,6 +272,29 @@ class LLMClient:
                         results.append(GeneratedReview(name=r_name, rating=r_rating, review=r_text))
 
                     if len(results) == len(ratings):
+                        if memory is not None:
+                            detected_cat = category or "generic"
+                            batch_texts: list[str] = []
+                            has_duplicate = False
+                            dup_reason = ""
+                            for res_item in results:
+                                is_dup, reason = memory.check_review_similarity(
+                                    candidate_text=res_item.review,
+                                    category=detected_cat,
+                                    existing_batch=batch_texts,
+                                )
+                                if is_dup:
+                                    has_duplicate = True
+                                    dup_reason = reason
+                                    working_rejected.append(res_item.review)
+                                    break
+                                batch_texts.append(res_item.review)
+
+                            if has_duplicate and attempt < self.config.max_retries:
+                                last_error = f"Uniqueness collision: {dup_reason}"
+                                time.sleep(1.0)
+                                continue
+
                         return results
 
                 finish_reason = choice.get("finish_reason", "")

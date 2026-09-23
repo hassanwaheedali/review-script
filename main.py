@@ -44,6 +44,8 @@ from persona_data import (
     get_ratings_distribution,
     get_review_count,
 )
+from prompt_templates import detect_category
+from review_memory import ReviewMemory
 from wc_client import ReviewPostResult, WooCommerceReviewClient
 
 console = Console()
@@ -298,6 +300,7 @@ def process_product_pipeline(
     stats: JobExecutionStats,
     enable_anim: bool = True,
     require_approval: bool = True,
+    memory: ReviewMemory | None = None,
 ) -> bool:
     """Executes the synthesis and publication pipeline for a single target product with human safeguard."""
     p_id = prod.id
@@ -341,6 +344,8 @@ def process_product_pipeline(
         )
     )
 
+    category = detect_category(p_name)
+
     # Generation & Approval Safeguard Loop (Regenerates if operator says 'n')
     while True:
         # 1. Determine dynamic review count (3, 4, or 5) & ratings distribution
@@ -357,12 +362,25 @@ def process_product_pipeline(
             enable_anim=enable_anim,
         )
 
+        recent_reviews = (
+            memory.get_anti_repetition_context(category=category, limit=8)
+            if memory is not None
+            else None
+        )
+
         try:
             with console.status(
                 f"[dim cyan]Synthesizing {review_count} authentic customer personas via AgentRouter ({CONFIG.agentrouter_model})...[/dim cyan]",
                 spinner="dots",
             ):
-                ai_reviews: list[GeneratedReview] = llm_client.generate_reviews(p_name, p_sku, ratings)
+                ai_reviews: list[GeneratedReview] = llm_client.generate_reviews(
+                    p_name,
+                    p_sku,
+                    ratings,
+                    recent_reviews=recent_reviews,
+                    memory=memory,
+                    category=category,
+                )
         except RuntimeError as e:
             console.print(f"[bold red]✗ [AI-CORE ERROR] Synthesis failed for Product #{p_id}: {e}[/bold red]")
             log_failure(CONFIG.failed_log_path, p_id, p_name, str(e))
@@ -444,8 +462,10 @@ def process_product_pipeline(
             ).lower()
 
             if action == "n":
+                if memory is not None:
+                    memory.add_rejected_reviews(ai_reviews)
                 console.print(
-                    f"\n[bold yellow]↺ Discarded reviews for Product #{p_id}. Requesting fresh synthesis from LLM co-processor...[/bold yellow]\n"
+                    f"\n[bold yellow]↺ Discarded reviews for Product #{p_id}. Blacklisting discarded text and requesting fresh synthesis from LLM co-processor...[/bold yellow]\n"
                 )
                 continue  # Loop again and regenerate fresh reviews for the exact same product!
             elif action == "s":
@@ -458,6 +478,9 @@ def process_product_pipeline(
                 console.print("\n[bold green]✔ Reviews Approved! Commencing deployment to WooCommerce...[/bold green]\n")
 
         # 5. Commit & Publish Approved Reviews
+        if memory is not None:
+            memory.add_approved_reviews(p_id, p_name, category, ai_reviews)
+
         reviews_posted_for_product = 0
         for idx, item in enumerate(ai_reviews):
             rating = item.rating
@@ -753,6 +776,8 @@ def main() -> None:
 
     # Initialize Engine Clients
     llm_client = LLMClient(CONFIG)
+    memory_path = CONFIG.state_file_path.parent / "review_memory.json"
+    review_memory = ReviewMemory(storage_path=memory_path)
     wc_client: WooCommerceReviewClient | None = None
     if not is_dry_run:
         wc_client = WooCommerceReviewClient(CONFIG)
@@ -784,6 +809,7 @@ def main() -> None:
             stats=stats,
             enable_anim=enable_anim,
             require_approval=not args.auto_approve,
+            memory=review_memory,
         )
 
         # Product cooldown delay

@@ -36,6 +36,12 @@ from prompt_templates import (
     get_category_vocab,
     is_installation_candidate,
 )
+from review_memory import (
+    ReviewMemory,
+    compute_jaccard_similarity,
+    has_shared_ngram,
+    normalize_roman_urdu,
+)
 from wc_client import ReviewPostResult, WooCommerceReviewClient
 
 # --- Fixtures ---
@@ -539,4 +545,155 @@ def test_process_product_pipeline_auto_approve(tmp_path: Path) -> None:
     assert success is True
     assert mock_llm.generate_reviews.call_count == 1
     assert stats.processed_products == 1
+
+
+# --- ReviewMemory & Anti-Repetition Tests ---
+
+def test_normalize_roman_urdu() -> None:
+    """Tests phonetic tokenization and normalization for Roman Urdu text."""
+    raw = "cooling bht fit hy, bilkul chilled kar deta ha! delivery thori late hoye."
+    tokens = normalize_roman_urdu(raw)
+    assert "boht" in tokens  # bht -> boht
+    assert "hai" in tokens  # hy -> hai
+    assert "!" not in tokens
+    assert "," not in tokens
+
+    # Variant spelling matches
+    t1 = normalize_roman_urdu("zero cut bilkul clean skin pe lagta nai")
+    t2 = normalize_roman_urdu("zero cut bilkul clean skin pe lagta nahi")
+    assert t1 == t2  # nai -> nahi
+
+
+def test_compute_jaccard_similarity() -> None:
+    """Tests Jaccard word-set similarity computation."""
+    toks1 = ["zero", "cut", "clean", "skin"]
+    toks2 = ["zero", "cut", "clean", "skin"]
+    assert compute_jaccard_similarity(toks1, toks2) == 1.0
+
+    toks3 = ["different", "words", "entirely"]
+    assert compute_jaccard_similarity(toks1, toks3) == 0.0
+
+    toks4 = ["zero", "cut", "other", "words"]
+    # Intersection: {zero, cut} (2), Union: {zero, cut, clean, skin, other, words} (6) -> 2/6 = 0.333
+    sim = compute_jaccard_similarity(toks1, toks4)
+    assert 0.30 <= sim <= 0.35
+
+
+def test_has_shared_ngram() -> None:
+    """Tests consecutive n-gram sequence detection for verbatim phrase cloning."""
+    t1 = ["zero", "cut", "bilkul", "clean", "shave"]
+    t2 = ["bhai", "ke", "liye", "zero", "cut", "bilkul", "clean", "machine"]
+    assert has_shared_ngram(t1, t2, n=4) is True
+
+    t3 = ["zero", "clean", "cut", "bilkul"]  # different order
+    assert has_shared_ngram(t1, t3, n=4) is False
+
+
+def test_review_memory_category_partitioning(tmp_path: Path) -> None:
+    """Tests that memory correctly partitions reviews by product category."""
+    storage = tmp_path / "test_memory.json"
+    mem = ReviewMemory(storage_path=storage, max_category_history=10)
+
+    # Add trimmer reviews
+    trimmer_revs = [
+        GeneratedReview(name="Ali", rating=5, review="Trimmer battery timing zabardast hai"),
+        GeneratedReview(name="Bilal", rating=5, review="Blade sharp hai clean cut karta"),
+    ]
+    mem.add_approved_reviews(1001, "WestPoint Hair Clipper", "trimmer", trimmer_revs)
+
+    # Trimmer context should have 2 reviews
+    trimmer_context = mem.get_anti_repetition_context("trimmer")
+    assert len(trimmer_context) == 2
+    assert "Trimmer battery timing zabardast hai" in trimmer_context
+
+    # Refrigerator context should NOT contain trimmer reviews as category memory
+    # But will fallback to global records if category is empty
+    fridge_context = mem.get_anti_repetition_context("refrigerator")
+    assert len(fridge_context) == 2  # falls back to recent global
+
+
+def test_review_memory_rejection_blacklist(tmp_path: Path) -> None:
+    """Tests that operator-rejected reviews ('n') are immediately blacklisted."""
+    storage = tmp_path / "test_memory.json"
+    mem = ReviewMemory(storage_path=storage)
+
+    rejected = [
+        GeneratedReview(name="Operator", rating=4, review="Discarded review because of phrasing"),
+    ]
+    mem.add_rejected_reviews(rejected)
+
+    # Discarded review must be in anti-repetition context
+    ctx = mem.get_anti_repetition_context("trimmer")
+    assert "Discarded review because of phrasing" in ctx
+
+    # Must be detected as duplicate if re-generated
+    is_dup, reason = mem.check_review_similarity(
+        "Discarded review because of phrasing",
+        category="trimmer",
+    )
+    assert is_dup is True
+    assert "previously discarded review" in reason
+
+
+def test_review_memory_length_adaptive_similarity(tmp_path: Path) -> None:
+    """Tests length-adaptive duplicate detection thresholds."""
+    storage = tmp_path / "test_memory.json"
+    mem = ReviewMemory(storage_path=storage)
+
+    # 1. Short review: Legitimate brief reaction must NOT be blocked
+    mem._get_category_buffer("iron").append("achi quality hy recommended")
+    is_dup, _ = mem.check_review_similarity("boht achi machine hy", category="iron")
+    assert is_dup is False  # Legitimate different short review
+
+    # 2. Short review: Exact or near-exact clone MUST be blocked
+    is_dup, reason = mem.check_review_similarity("achi quality hai recommended", category="iron")
+    assert is_dup is True  # 'hy' vs 'hai' normalized exact match
+
+    # 3. Longer review: Verbatim phrase copy (user's real trimmer bug)
+    mem._get_category_buffer("trimmer").append(
+        "zero cut bilkul clean skin pe lagta nai 1 charge pe 4 dafa beard aram se"
+    )
+    is_dup, reason = mem.check_review_similarity(
+        "zero cut bilkul clean skin pe lagta nahi bhai k liye mangwaya tha",
+        category="trimmer",
+    )
+    assert is_dup is True
+    assert "Shared 4-gram" in reason or "High token similarity" in reason
+
+
+def test_build_review_prompt_with_memory() -> None:
+    """Tests that build_review_prompt injects anti-repetition and diversity tags."""
+    recent = ["zero cut bilkul clean skin pe lagta nai", "blade sharp smooth baal kheenchy bina"]
+    prompt = build_review_prompt(
+        product_name="WestPoint Hair Clipper WF-6813",
+        sku="WF-6813",
+        ratings=[5, 5, 4],
+        recent_reviews=recent,
+    )
+
+    assert "<anti_repetition_memory>" in prompt
+    assert "zero cut bilkul clean skin pe lagta nai" in prompt
+    assert "<diversity_steering>" in prompt
+    assert "CRITICAL ANTI-COPY MANDATE" in prompt
+    assert "DIVERSITY CHECK" in prompt
+
+
+def test_review_memory_persistence(tmp_path: Path) -> None:
+    """Tests atomic disk save and reload of ReviewMemory state."""
+    storage = tmp_path / "test_memory.json"
+    mem1 = ReviewMemory(storage_path=storage, max_category_history=10)
+
+    revs = [
+        GeneratedReview(name="Tariq", rating=5, review="Cooling boht zabardast hai chilled water"),
+    ]
+    mem1.add_approved_reviews(2001, "Haier Refrigerator HRF-336", "refrigerator", revs)
+    assert storage.exists()
+
+    # Create new instance pointing to same file
+    mem2 = ReviewMemory(storage_path=storage, max_category_history=10)
+    assert len(mem2._global_records) == 1
+    assert mem2._global_records[0].product_name == "Haier Refrigerator HRF-336"
+    assert "refrigerator" in mem2._category_buffers
+    assert len(mem2._category_buffers["refrigerator"]) == 1
+
 

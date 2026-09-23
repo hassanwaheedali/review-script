@@ -10,6 +10,7 @@
 # Pipeline State & Local Logs
 # ==============================================================================
 progress_state.json
+review_memory.json
 failed_reviews.log
 *.log
 

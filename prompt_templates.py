@@ -81,9 +81,9 @@ CATEGORY_VOCAB: dict[str, str] = {
     "refrigerator": (
         "Real buyers say: cooling bht fit hy bilkul chilled kar deta ha, compressor ki awaz bilkul nahi, "
         "ammi boht khush hoi, packing bht safe thi tut na jaye dar tha, color same aya, "
-        "chilled water in 15 mins, warranty card stamped mila. "
+        "cooling best hay, warranty card stamped mila. "
         "4-star complaints: side py halka sa scratch delivery k waqt, handles thore nazuk lag rahe, "
-        "wire b choti hy, delivery 3 din late. "
+        "wire b choti hy, delivery thori late hoye. "
         "3-star: chalta theek hy par body thori halki lagi guzara ha, cooling normal ha koi itni khaas nai."
     ),
     "washing_machine": (
@@ -95,15 +95,15 @@ CATEGORY_VOCAB: dict[str, str] = {
         "3-star: spin k doran thora hilte vibrate krti, motor garam ho jati lagatar chalayein, guzara hy."
     ),
     "ac": (
-        "Real buyers say: room ko 10 mint me chil bana deta hy, bijli kam khata meter slow chalta, "
+        "Real buyers say: cooling achi hay paisa key hisab sey achi cheez miley, bijli kam khata meter slow chalta, "
         "bill me wazeh farq aya hy 4 ampere py chal raha, chilled cooling heating feature b check kia, "
         "zero noise level, installation team jaldi agai. "
-        "4-star complaints: outdoor unit thora awaz karta, box thora phata hua tha daraz riders ne "
+        "4-star complaints: outdoor unit thora awaz karta, bas box thora phata hua tha "
         "dhang se handle nai kia, remote k cell sath nahi bheje. "
         "3-star: cooling theek hy normal ha boht super chilled nahi krta, inverter board trip kr jata low voltage py."
     ),
     "blender": (
-        "Real buyers say: milk shake 1 minute me ban jata hy baraf b achi crush krta, blades bht sharp "
+        "Real buyers say: milk shake bohat hi maze ka bnta hy baraf b achi crush krta, blades bht sharp "
         "masala b pis jata hy, ammi k liye lia tha unko bht psnd aya, motor ki awaz normal, "
         "jug plastic heavy duty, full paisa wasool. "
         "4-star complaints: thori plastic ki smell ati shuru me chalao to, pulp container thora chota "
@@ -113,21 +113,21 @@ CATEGORY_VOCAB: dict[str, str] = {
     "roti_maker": (
         "Real buyers say: practice chahye pehle din kharab ab boht narm phooli hui roti banti hy, "
         "subah bacho k lunch k liye jaldi ban jati, non stick coating achi atta nahi chipakta, "
-        "hostel walo k liye best bahir ki roti se jan chooti, plate garam jaldi hoti hai. "
+        "hostel walo k liye best hay bahir ki roti se jan chooti, plate garam jaldi hoti hai. "
         "4-star complaints: kinare thode kache reh jate hain haath se dabana parta, cord boht choti "
         "extension board use krna prta, aata narm goondhna parta wrna roti papad ban jati. "
         "3-star: itna asaan nai jesa video me dikhate hain, handle plastic ka bht halka toot jaye ga."
     ),
     "air_fryer": (
-        "Real buyers say: bina oil k crispy fries bante hain healthy diet walo k liye, chicken tikka "
+        "Real buyers say: bina oil k crispy fries bante hain healthy diet walo k liye, chicken tikka, overall nice product good experience, "
         "20 mint me juicy bake, basket size kafi bara touch panel smooth, chicken wings crispy oil free, "
-        "paisa wasool cooking asaan ho gai. "
-        "4-star complaints: capacity thori kam bari family k liye 2 bar chalana prta, recipe book Urdu me "
+        "paisa wasool cooking mey asani ki hay. "
+        "4-star complaints: capacity thori kam bari family k liye 2 bar chalana prta, recipe book thori mushkil hay samagna, "
         "honi chahiye thi, shuru k 2 din plastic burning smell ab theek. "
         "3-star: fries crunch nahi hote jese oil me dry ban jate, non stick coating pehli wash me scratch."
     ),
     "toaster": (
-        "Real buyers say: bread bilkul even brown jaldi nahi hy kids enjoy, 1 se 6 settings 3 pe "
+        "Real buyers say: bread bilkul even brown banti hay, acha toaster hay overall nice product, quality wise sahi hay, "
         "perfect toast, chota compact kitchen counter pe jagah kam, crumb tray nikal k saaf karna asan, "
         "roz subah time bachta hy. "
         "4-star complaints: bara bread slice pura andar nahi ata bahir reh jata, level 4 se ooper "
@@ -135,15 +135,15 @@ CATEGORY_VOCAB: dict[str, str] = {
         "3-star: lever thora tight zor lagta plastic halka, aik side ziada brown dosri kam uneven heating."
     ),
     "iron": (
-        "Real buyers say: purane zamane wali quality wazan acha kapray pe dabao ki zrurat nai, "
+        "Real buyers say: bohat achi istri hay kaprey sahi iron karti hay, "
         "smooth gliding teflon base kapre jalte nahi, steam powerful wrinkles aik second me gayab, "
         "cord 360 ghoomti ulajhti nahi, thermostat accurate cut off karta. "
         "4-star complaints: steam me pani leakage ka halka dar spray button hard, taar ki length "
-        "choti board pass hona chahiye, packaging thori dabbi hui thi. "
+        "choti board pass hona chahiye, packaging thori dabbi hui thi, bas bijli thori zyada leta hay. "
         "3-star: steam tanki bht choti bar bar refill, maximum heat pe kapray chipakte, weight normal purani baat nahi."
     ),
     "kettle": (
-        "Real buyers say: 2 minute me pani full ubaal gas ki load shedding me naimat, steel body "
+        "Real buyers say: achi product hay galdi sey kam hogata hay bena gas key, steel body "
         "mazboot auto shut off perfect dry burn ka darr nahi, hostel k room maggie chai mints me, "
         "pure stainless steel no plastic smell boil hotay hi click off. "
         "4-star complaints: wire base thori loose table pe sahi rkhna prta, bahir se steel body bht "
@@ -151,8 +151,8 @@ CATEGORY_VOCAB: dict[str, str] = {
         "3-star: 2 haftay me bottom pe white spots scale jam gaye, auto cutoff kbi kaam krta kbi nahi dar lagta."
     ),
     "microwave": (
-        "Real buyers say: salan garam krne k liye best, 30 sec me tea garam kar deta, buttons controls "
-        "simple ammi asani se use kar leti, defrost zabardast gosht 5 mint me normal, "
+        "Real buyers say: salan garam krne k liye best, useful product, buttons controls "
+        "simple ammi asani se use kar leti, defrost zabardast gosht wagera sab best hay, "
         "glass turn table smooth ghoomti no extra noise. "
         "4-star complaints: andar ki light thori dim bahir se khana nahi dikhta, power cord choti, "
         "door push button thora hard dabana parta. "
@@ -201,7 +201,7 @@ CATEGORY_VOCAB: dict[str, str] = {
     "trimmer": (
         "Real buyers say: zero cut bilkul clean skin pe lagta nahi, 1 charge pe 4 dafa beard aram se, "
         "blade sharp smooth baal kheenchy bina, usb charging power bank se b charge, "
-        "salon k kharche khatam clean shave zero trimming. "
+        "overall good product. "
         "4-star complaints: charging indicator light color change nahi pta nai kab full, oil ki bottle "
         "packaging me leak ho gai, thora vibration ziada hath me. "
         "3-star: heavy beard pe phans k chalta baal khenchta, plastic combs halkay clip loose ho gya battery 20 mint bus."
@@ -210,12 +210,12 @@ CATEGORY_VOCAB: dict[str, str] = {
         "Real buyers say: colors boht vibrant 4k video smooth, Netflix YouTube lag free voice control "
         "Google assistant kamal, display zabardast sound bar zaroorat nahi speakers bass clean, "
         "panel borders thin slim smart look, wifi jaldi pakar leta screen mirroring fast. "
-        "4-star complaints: wall mount bracket sath nahi bheja alag lena para, 1gb ram heavy apps pe "
-        "slow restart, delivery boy akele aya heavy box help karni pari. "
+        "4-star complaints: overall good bas agar is me sound thori aur achi hoti to best, "
+        "slow restart. "
         "3-star: viewing angles side se picture wash out white, sound tinny bilkul bass nahi speaker phat-te unchi awaz."
     ),
     "humidifier": (
-        "Real buyers say: mist throw strong winter dry throat khansi k liye best, 7 colors led "
+        "Real buyers say: mist throw strong winter dry throat khansi k liye best, zyada colors led "
         "aesthetic look bedroom night lamp ka kaam, aroma essential oil pura kamra khushboo, "
         "chota portable desk pe fit aik refill me pura din, ultrasonic mist silent. "
         "4-star complaints: charging cable choti switch pass hona zaroori, tanki safai mushkil, "
@@ -223,9 +223,9 @@ CATEGORY_VOCAB: dict[str, str] = {
         "3-star: table pe paani jama ho jata floor wet, button touch kbi do bar dabana plastic halki girne se crack."
     ),
     "geyser": (
-        "Real buyers say: tap kholo 5 second me garam pani shuru, low gas pressure pe auto ignite, "
+        "Real buyers say: tap kholo kuch der me garam pani agata, low gas pressure pe auto ignite, "
         "copper pipes heavy quality thermostat accurate, winter savior cold water tension khatam, "
-        "bijli gas dono bachat batteries 6 mahine chal jati. "
+        "bijli gas dono bachat batteries 6 mahine tak bhi chal jati. "
         "4-star complaints: water pressure sensor thora sensitive pump on krna prta, installation kit "
         "pipes quality normal bahir se li, ignition cells box sath nahi aye market se. "
         "3-star: gas low ho to bar bar flame band pressure stabilizer, temperature knob regulate nai ya ubalta ya normal."
@@ -335,7 +335,7 @@ CATEGORY_VOCAB: dict[str, str] = {
         "3-star: khushboo feel nahi bus hawa phenkta jese normal fan, filter Lahore pollution 2 maheene me 40% expensive."
     ),
     "dehumidifier": (
-        "Real buyers say: deewaro ki seelan ka hal kamre se roz 2 liter pani nichod, wardrob me "
+        "Real buyers say: deewaro ki seelan ka hal kamre se roz kafi pani nichod, wardrob me "
         "fungus musty smell khatam breathing fresh, compressor auto off tank full flood protection, "
         "continuous drain pipe option, AC k sath cooling double chip-chipahat end. "
         "4-star complaints: room temperature 1-2 degree warm exhaust heat se, unit wazan heavy wheels "
@@ -448,7 +448,7 @@ You just unboxed your order from KiaChahiye.com. You're typing a quick review on
 THIS IS HOW REAL PAKISTANIS TYPE ON MOBILE (copy these exact frequency patterns):
 
 Spelling variations with real buyer frequency distributions — distribute your reviews accordingly:
-- "hai" frequency: 40% "hy", 20% "hai", 15% "h" (bare consonant), 15% "hay", 10% "haa"
+- "hai" frequency: 80% "hy", 10% "hai", 5% "hay", 3% "h" (bare consonant), 2% "haa"
 - "bohat" frequency: 50% "boht", 25% "bht", 15% "bohot", 10% "bahout"
 - "theek" frequency: 49% "theek", 39% "thek", 12% "thk"
 - "ziada" frequency: 54% "ziada", 41% "zyada", 5% "zda"
@@ -498,7 +498,7 @@ STUDY THESE REAL KIACHAHIYE.COM / DARAZ.PK REVIEWS — your output must sound EX
 - "the fridge is excellent in terms of cooling and quality. received on time"
 - "Fridge bilkul silent hai aur thanda boht tezi se karta hai."
 - "Pehle semi-automatic thi, leken is se kaam boht asaan ho gaya. Motor power zabardast hai aur kapray bilkul saaf dho leti hai."
-- "Achi quality hai, delivery ke sath installation bhi free kar di."
+- "Achi quality hai, delivery ke sath installation bhi free karwaye. recommended"
 - "I recived my order bohat hi zabardast hy same wesa hi hy jysy picture main tha thanks kiachahye"
 - "boht zabardast fridge hai cooling bht fit hy bilkul chilled kar deta ha time pe delivery mili ammi boht khush hoi"
 - "mashallah boht pyara fridge hy color b same aya awaz bilkul b nahi hy compressor ki 10/10 recommended"
@@ -679,6 +679,84 @@ def is_installation_candidate(product_name: str) -> bool:
     return any(k in name_lower for k in INSTALLATION_KEYWORDS)
 
 
+CATEGORY_ANGLES: dict[str, list[str]] = {
+    "trimmer": [
+        "Battery life, charging speed & cordless convenience",
+        "Blade sharpness, skin comfort & zero tugging on thick hair",
+        "Grip ergonomics, lightweight hand feel & travel portability",
+        "Gift for family / brother / husband or personal grooming routine",
+        "Unboxing condition, accessories & comb attachments quality",
+        "Motor sound & vibration level during prolonged use",
+    ],
+    "ac": [
+        "Cooling speed & room temperature drop in extreme heat",
+        "Low electricity consumption & inverter meter ampere savings",
+        "Quiet indoor unit operation & sleep comfort",
+        "Delivery handling, outer box packaging & installation team",
+        "Remote control functionality, heating/cooling mode toggle",
+    ],
+    "refrigerator": [
+        "Quick ice making & cooling retention during power cuts",
+        "Silent compressor operation & zero humming noise",
+        "Spacious glass shelves, door pockets & vegetable crisper",
+        "Exterior color finish, safe delivery packing without scratches",
+        "Thermostat accuracy & electricity efficiency",
+    ],
+    "washing_machine": [
+        "Washing agitation power on tough stains and collars",
+        "Spin dryer speed and quick drying time",
+        "Water drainage pipe connection and tap fitting",
+        "Motor stability and minimal vibration on level floor",
+        "Tub capacity and ease of daily laundry loads",
+    ],
+    "blender": [
+        "Milkshake and fruit smoothie blending speed",
+        "Spice and dry masala grinding fineness",
+        "Jug plastic thickness and lid lock tightness",
+        "Motor power and noise level under load",
+        "Blade sharpness and ice crushing capability",
+    ],
+    "air_fryer": [
+        "Crispy fries and snacks with zero or minimal oil",
+        "Chicken wings and tikka baking time and juiciness",
+        "Basket capacity for family meals and non-stick coating",
+        "Touch panel presets and temperature control ease",
+        "Cleaning convenience and odor-free kitchen cooking",
+    ],
+    "toaster": [
+        "Even browning level and toast crispiness",
+        "Crumb tray removal and ease of cleaning",
+        "Compact size on kitchen counter",
+        "Bread slice thickness fitting in slots",
+    ],
+    "iron": [
+        "Teflon base smooth gliding and zero fabric sticking",
+        "Steam blast wrinkle removal on cotton and linen",
+        "Cord rotation flexibility and reach to plug",
+        "Thermostat temperature cutoff accuracy",
+    ],
+    "kettle": [
+        "Boiling speed for tea/coffee under 2-3 minutes",
+        "Stainless steel body durability and auto cutoff safety",
+        "Hostel or office desk tea preparation naimat",
+        "Handle heat insulation and pouring spout design",
+    ],
+    "microwave": [
+        "Food reheating speed and tea warming in 30 seconds",
+        "Meat defrosting uniformity and turntable rotation",
+        "Simple button controls for family members/parents",
+        "Internal capacity and plate fitting",
+    ],
+    "generic": [
+        "Initial unboxing, packaging safety & visual finish",
+        "Practical performance & daily household convenience",
+        "Durability feel, button/knob quality & build materials",
+        "Value for money compared to market alternatives",
+        "Ease of cleaning, storage & portability",
+    ],
+}
+
+
 def build_review_prompt(
     product_name: str,
     sku: str,
@@ -686,8 +764,10 @@ def build_review_prompt(
     allow_detailed: bool = False,
     include_installation: bool = False,
     include_customer_service: bool = False,
+    recent_reviews: list[str] | None = None,
+    rejected_reviews: list[str] | None = None,
 ) -> str:
-    """Builds the structured user prompt for review generation.
+    """Builds the structured user prompt for review generation with anti-repetition memory.
 
     Args:
         product_name: The full product title as listed on the store.
@@ -698,6 +778,8 @@ def build_review_prompt(
             (~35% of eligible appliances — controlled probabilistically in llm_client.py).
         include_customer_service: If True, instructs LLM to include one customer service mention
             (~25% of products across catalog).
+        recent_reviews: Optional list of recent review texts to avoid repeating.
+        rejected_reviews: Optional list of reviews discarded in current session to avoid regenerating.
 
     Returns:
         Structured user prompt ready to send as the 'user' message to the LLM.
@@ -768,14 +850,61 @@ def build_review_prompt(
     vocab_guidance = get_category_vocab(category)
     component_info = COMPONENT_GROUNDING.get(category, "")
 
-    # --- Build focused product context block ---
+    # --- Build focused product context block with strict anti-copy mandate ---
     product_context = f"""<product_context>
 Product: {product_name}
 Category: {category}
 Physical reality: {component_info}
-Vocabulary guidance: {vocab_guidance}
+Vocabulary guidance (THEME INSPIRATION ONLY — DO NOT COPY PHRASES VERBATIM):
+{vocab_guidance}
+CRITICAL ANTI-COPY MANDATE: The vocabulary guidance above gives you topic ideas only. NEVER copy these exact phrases, sentence structures, or wording word-for-word. Express these ideas using fresh, unique sentence structures and diverse words.
 IMPORTANT: Only mention parts and experiences that physically exist on THIS product. Never cross-contaminate from other product types.
 </product_context>"""
+
+    # --- Dynamic focus angle assignment for within-batch diversity ---
+    angles_pool = CATEGORY_ANGLES.get(category, CATEGORY_ANGLES["generic"]).copy()
+    random.shuffle(angles_pool)
+    selected_angles = [angles_pool[i % len(angles_pool)] for i in range(count)]
+    angles_formatted = "\n".join(
+        f"- Review {i+1} ({assigned_names[i]}): Focus angle -> {selected_angles[i]}"
+        for i in range(count)
+    )
+    diversity_directive = (
+        "<diversity_steering>\n"
+        "Each review in this batch MUST explore a distinct topic angle:\n"
+        f"{angles_formatted}\n"
+        "Do NOT write multiple reviews talking about the exact same thing.\n"
+        "</diversity_steering>\n\n"
+    )
+
+    # --- Anti-repetition memory directive (Cross-product diversity) ---
+    anti_rep_items: list[str] = []
+    if rejected_reviews:
+        for r in rejected_reviews:
+            r_clean = r.strip()
+            if r_clean and r_clean not in anti_rep_items:
+                anti_rep_items.append(f"[DISCARDED PREVIOUS ATTEMPT]: {r_clean}")
+    if recent_reviews:
+        for r in recent_reviews:
+            r_clean = r.strip()
+            if r_clean and r_clean not in anti_rep_items:
+                anti_rep_items.append(r_clean)
+
+    if anti_rep_items:
+        formatted_past = "\n".join(f'- "{item}"' for item in anti_rep_items[:12])
+        anti_repetition_directive = (
+            "<anti_repetition_memory>\n"
+            "CRITICAL DIVERSITY MANDATE:\n"
+            "The following reviews were recently published or discarded for products in our store:\n"
+            f"{formatted_past}\n\n"
+            "YOU MUST NOT REPEAT OR CLOSELY PARAPHRASE ANY OF THESE REVIEWS!\n"
+            "- Do NOT use the same opening words, sentence structures, or punchlines.\n"
+            "- Do NOT repeat the exact same complaint or observation.\n"
+            "- Make your new reviews 100% distinct in voice, word choice, and angle.\n"
+            "</anti_repetition_memory>\n\n"
+        )
+    else:
+        anti_repetition_directive = ""
 
     # --- Brand-specific logistics directive (programmatically enforced) ---
     name_lower = product_name.lower()
@@ -838,7 +967,7 @@ IMPORTANT: Only mention parts and experiences that physically exist on THIS prod
 
 {logistics_directive}
 
-{installation_directive}{cs_directive}<batch_requirements>
+{installation_directive}{cs_directive}{anti_repetition_directive}{diversity_directive}<batch_requirements>
 Generate exactly {count} reviews. Match each review to its corresponding rating in <target_ratings>.
 Assign these exact reviewer names to the {count} reviews: {assigned_names_str}
 
@@ -865,6 +994,7 @@ Before writing each review, imagine:
 4. What would they ACTUALLY notice first — packaging? product look? first use?
 5. For 4-star: pick a DIFFERENT minor complaint than the other 4-star reviews
 6. Read your review back — does it sound like a WhatsApp voice-to-text or a product manual? If manual, rewrite it messier.
+7. DIVERSITY CHECK: Compare your proposed review against <anti_repetition_memory> and other reviews in this batch. If it uses identical words or starts the same way, rewrite it with a completely different vocabulary and angle.
 </think_first>
 
 <instructions>
